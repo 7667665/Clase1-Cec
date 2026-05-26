@@ -1,0 +1,1266 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Excel — Funciones y Herramientas</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Sora:wght@300;400;600;800&display=swap');
+
+  :root {
+    --green: #217346;
+    --green-light: #2ecc71;
+    --green-mid: #1a5c38;
+    --excel-green: #107c41;
+    --bg: #0d1117;
+    --bg2: #161b22;
+    --surface: #1e2630;
+    --border: #30363d;
+    --text: #e6edf3;
+    --text-muted: #8b949e;
+    --accent: #4ade80;
+    --accent2: #facc15;
+    --accent3: #60a5fa;
+    --cell-bg: #1a2535;
+    --cell-header: #1e3a2a;
+    --cell-highlight: #0f4c2a;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Sora', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    height: 100vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ── TOPBAR ── */
+  .topbar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 24px;
+    background: var(--bg2);
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .excel-icon {
+    width: 28px; height: 28px;
+    background: var(--excel-green);
+    border-radius: 5px;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Space Mono', monospace;
+    font-weight: 700;
+    font-size: 13px;
+    color: white;
+  }
+  .topbar-title { font-size: 13px; color: var(--text-muted); }
+  .topbar-title strong { color: var(--accent); font-weight: 600; }
+  .slide-counter {
+    margin-left: auto;
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+
+  /* ── SLIDES ── */
+  .slides-wrapper {
+    flex: 1;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .slide {
+    position: absolute;
+    inset: 0;
+    padding: 32px 48px;
+    display: flex;
+    flex-direction: column;
+    opacity: 0;
+    transform: translateX(60px);
+    transition: opacity .45s ease, transform .45s ease;
+    pointer-events: none;
+    overflow-y: auto;
+  }
+  .slide.active {
+    opacity: 1;
+    transform: translateX(0);
+    pointer-events: all;
+  }
+  .slide.exit {
+    opacity: 0;
+    transform: translateX(-60px);
+  }
+
+  /* ── SLIDE HEADER ── */
+  .slide-tag {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .slide-title {
+    font-size: 28px;
+    font-weight: 800;
+    line-height: 1.2;
+    margin-bottom: 6px;
+  }
+  .slide-title span { color: var(--accent); }
+  .slide-subtitle {
+    font-size: 14px;
+    color: var(--text-muted);
+    font-weight: 300;
+    margin-bottom: 28px;
+  }
+
+  /* ── HERO SLIDE ── */
+  .hero-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    gap: 20px;
+  }
+  .hero-badge {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 3px;
+    color: var(--excel-green);
+    background: rgba(33,115,70,.15);
+    border: 1px solid rgba(33,115,70,.3);
+    padding: 6px 16px;
+    border-radius: 20px;
+  }
+  .hero-title {
+    font-size: clamp(28px, 5vw, 52px);
+    font-weight: 800;
+    line-height: 1.1;
+  }
+  .hero-title .fn { color: var(--accent); }
+  .hero-title .plus { color: var(--accent2); }
+  .hero-desc {
+    max-width: 540px;
+    font-size: 15px;
+    color: var(--text-muted);
+    line-height: 1.7;
+    font-weight: 300;
+  }
+  .hero-formula {
+    font-family: 'Space Mono', monospace;
+    font-size: 14px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    padding: 14px 24px;
+    border-radius: 6px;
+    color: var(--accent);
+  }
+  .hero-formula .f1 { color: var(--accent3); }
+  .hero-formula .f2 { color: var(--accent2); }
+  .hero-formula .num { color: #f87171; }
+
+  /* ── GRID / CARDS ── */
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-bottom: 20px; }
+  .three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; margin-bottom: 20px; }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px;
+  }
+  .card.accent-top { border-top: 3px solid var(--accent); }
+  .card.accent-top2 { border-top: 3px solid var(--accent3); }
+  .card.accent-top3 { border-top: 3px solid var(--accent2); }
+
+  .card-icon { font-size: 26px; margin-bottom: 10px; }
+  .card-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    color: var(--text-muted);
+    letter-spacing: 2px;
+    margin-bottom: 6px;
+  }
+  .card-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--accent);
+    margin-bottom: 8px;
+  }
+  .card-title.blue { color: var(--accent3); }
+  .card-title.yellow { color: var(--accent2); }
+  .card-body {
+    font-size: 13px;
+    color: var(--text-muted);
+    line-height: 1.6;
+  }
+
+  /* ── EXCEL TABLE ── */
+  .excel-wrap {
+    background: var(--cell-bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 20px;
+  }
+  .excel-row-bar {
+    background: var(--bg2);
+    border-bottom: 1px solid var(--border);
+    padding: 5px 12px;
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    color: var(--text-muted);
+    display: flex; gap: 8px;
+  }
+  table.excel-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+  }
+  .excel-table th {
+    background: var(--cell-header);
+    color: var(--accent);
+    padding: 7px 12px;
+    border: 1px solid var(--border);
+    font-weight: 700;
+    font-size: 11px;
+    text-align: center;
+    white-space: nowrap;
+  }
+  .excel-table td {
+    padding: 6px 12px;
+    border: 1px solid rgba(48,54,61,.6);
+    color: var(--text);
+    text-align: center;
+    transition: background .2s;
+    white-space: nowrap;
+  }
+  .excel-table td:first-child {
+    color: var(--accent3);
+    font-weight: 600;
+    text-align: left;
+    background: rgba(96,165,250,.05);
+  }
+  .excel-table tr:hover td { background: rgba(74,222,128,.04); }
+  .excel-table td.hl { background: var(--cell-highlight) !important; color: var(--accent) !important; font-weight: 700; }
+  .excel-table td.hl-col { background: rgba(250,204,21,.08) !important; color: var(--accent2) !important; }
+  .excel-table td.result { background: rgba(74,222,128,.18) !important; color: var(--accent) !important; font-weight: 700; font-size: 13px; }
+
+  /* ── FORMULA BOX ── */
+  .formula-box {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    border-radius: 6px;
+    padding: 14px 18px;
+    font-family: 'Space Mono', monospace;
+    font-size: 13px;
+    margin-bottom: 16px;
+  }
+  .formula-box .fn-name { color: var(--accent3); }
+  .formula-box .fn-name2 { color: var(--accent2); }
+  .formula-box .ref { color: #f87171; }
+  .formula-box .sep { color: var(--text-muted); }
+  .formula-box .kw { color: var(--accent); }
+  .formula-label {
+    font-size: 11px;
+    color: var(--text-muted);
+    letter-spacing: 2px;
+    margin-bottom: 6px;
+    font-family: 'Space Mono', monospace;
+  }
+
+  /* ── STEP CARDS ── */
+  .steps { display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px; }
+  .step {
+    display: flex; gap: 16px; align-items: flex-start;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px 18px;
+    transition: border-color .2s;
+  }
+  .step:hover { border-color: var(--accent); }
+  .step-num {
+    font-family: 'Space Mono', monospace;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--accent);
+    min-width: 32px;
+    line-height: 1;
+  }
+  .step-body { flex: 1; }
+  .step-title { font-weight: 700; font-size: 14px; margin-bottom: 4px; }
+  .step-desc { font-size: 12px; color: var(--text-muted); line-height: 1.6; }
+  .step-formula {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    background: var(--bg);
+    padding: 4px 10px;
+    border-radius: 4px;
+    margin-top: 6px;
+    display: inline-block;
+    color: var(--accent);
+  }
+
+  /* ── DEMO INTERACTIVO ── */
+  .demo-wrap {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+    flex: 1;
+    min-height: 0;
+  }
+  .demo-left { display: flex; flex-direction: column; gap: 12px; }
+  .demo-right { display: flex; flex-direction: column; gap: 12px; }
+
+  .input-group label {
+    display: block;
+    font-size: 11px;
+    color: var(--text-muted);
+    letter-spacing: 1.5px;
+    margin-bottom: 6px;
+    font-family: 'Space Mono', monospace;
+  }
+  .input-group select {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    padding: 10px 14px;
+    font-family: 'Sora', sans-serif;
+    font-size: 14px;
+    outline: none;
+    cursor: pointer;
+    transition: border-color .2s;
+  }
+  .input-group select:focus { border-color: var(--accent); }
+
+  .result-box {
+    background: var(--surface);
+    border: 2px solid var(--border);
+    border-radius: 10px;
+    padding: 18px;
+    text-align: center;
+    transition: border-color .3s, background .3s;
+  }
+  .result-box.has-result {
+    border-color: var(--accent);
+    background: rgba(74,222,128,.06);
+  }
+  .result-label {
+    font-size: 11px;
+    color: var(--text-muted);
+    letter-spacing: 2px;
+    margin-bottom: 8px;
+    font-family: 'Space Mono', monospace;
+  }
+  .result-value {
+    font-family: 'Space Mono', monospace;
+    font-size: 36px;
+    font-weight: 700;
+    color: var(--accent);
+    transition: all .3s;
+  }
+  .result-unit { font-size: 14px; color: var(--text-muted); margin-top: 4px; }
+
+  .live-formula {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 12px;
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    line-height: 1.8;
+    color: var(--text-muted);
+  }
+  .live-formula .dyn { color: var(--accent2); font-weight: 700; }
+
+  /* ── MINI TABLE DEMO ── */
+  .mini-table-wrap { overflow: auto; border-radius: 8px; border: 1px solid var(--border); }
+  table.mini-table {
+    border-collapse: collapse;
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    width: 100%;
+  }
+  .mini-table th {
+    background: var(--cell-header);
+    color: var(--accent);
+    padding: 5px 10px;
+    border: 1px solid var(--border);
+    text-align: center;
+  }
+  .mini-table td {
+    padding: 4px 10px;
+    border: 1px solid rgba(48,54,61,.5);
+    color: var(--text);
+    text-align: center;
+    font-size: 11px;
+  }
+  .mini-table td:first-child { color: var(--accent3); text-align: left; }
+  .mini-table td.hrow { background: rgba(250,204,21,.1); color: var(--accent2); }
+  .mini-table td.hcol { background: rgba(74,222,128,.08); color: var(--accent); }
+  .mini-table td.hres { background: rgba(74,222,128,.25); color: var(--accent); font-weight: 700; }
+
+  /* ── BOTTOM NAV ── */
+  .bottombar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 14px 24px;
+    background: var(--bg2);
+    border-top: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .nav-btn {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 9px 22px;
+    border-radius: 6px;
+    font-family: 'Sora', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all .2s;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .nav-btn:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+  .nav-btn:disabled { opacity: 0.3; cursor: default; }
+  .nav-btn.primary {
+    background: var(--excel-green);
+    border-color: var(--excel-green);
+    color: white;
+  }
+  .nav-btn.primary:hover { background: #0f6436; border-color: #0f6436; color: white; }
+
+  .dots { display: flex; gap: 6px; }
+  .dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--border);
+    cursor: pointer;
+    transition: all .2s;
+  }
+  .dot.active { background: var(--accent); transform: scale(1.3); }
+
+  /* ── UTIL ── */
+  .tag {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-family: 'Space Mono', monospace;
+    font-weight: 700;
+  }
+  .tag.green { background: rgba(74,222,128,.15); color: var(--accent); border: 1px solid rgba(74,222,128,.3); }
+  .tag.blue { background: rgba(96,165,250,.15); color: var(--accent3); border: 1px solid rgba(96,165,250,.3); }
+  .tag.yellow { background: rgba(250,204,21,.15); color: var(--accent2); border: 1px solid rgba(250,204,21,.3); }
+
+  .info-row {
+    display: flex; gap: 10px; align-items: flex-start;
+    font-size: 13px; color: var(--text-muted); line-height: 1.6;
+    margin-bottom: 10px;
+  }
+  .info-row .icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+
+  .divider { height: 1px; background: var(--border); margin: 16px 0; }
+
+  /* Scroll fix */
+  .slide { scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="excel-icon">XL</div>
+  <div class="topbar-title"><strong>Excel</strong> — Funciones y Herramientas Esenciales</div>
+  <div class="slide-counter" id="counter">1 / 6</div>
+</div>
+
+<div class="slides-wrapper">
+
+  <!-- ══ SLIDE 1: HERO ══ -->
+  <div class="slide active" id="slide-0">
+    <div class="hero-content">
+      <div class="hero-badge">📊 FUNCIONES DE BÚSQUEDA AVANZADA</div>
+      <div class="hero-title">
+        <span class="fn">BUSCARV</span>
+        <span class="plus"> + </span>
+        <span class="fn">COINCIDIR</span>
+      </div>
+      <div class="hero-desc">
+        Aprende a buscar valores usando <strong>dos criterios simultáneos</strong>: por fila <em>y</em> por columna. La combinación perfecta para tablas extensas de ventas, datos cruzados o cualquier matriz de información.
+      </div>
+      <div class="hero-formula">
+        =<span class="f1">BUSCARV</span>(ciudad; tabla; <span class="f2">COINCIDIR</span>(mes; encabezados; <span class="num">0</span>); <span class="num">FALSO</span>)
+      </div>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center">
+        <span class="tag green">🔍 Búsqueda por fila</span>
+        <span class="tag blue">📌 Posición dinámica</span>
+        <span class="tag yellow">⚡ Columna flexible</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ SLIDE 2: EL PROBLEMA ══ -->
+  <div class="slide" id="slide-1">
+    <div class="slide-tag">01 — EL PROBLEMA</div>
+    <div class="slide-title">¿Por qué <span>BUSCARV solo</span> no es suficiente?</div>
+    <div class="slide-subtitle">BUSCARV busca filas perfectamente… pero la columna es fija.</div>
+
+    <div class="two-col">
+      <div class="card accent-top">
+        <div class="card-icon">✅</div>
+        <div class="card-label">LO QUE HACE BUSCARV</div>
+        <div class="card-title">Busca por fila</div>
+        <div class="card-body">Encuentra el valor en la primera columna y devuelve el dato de esa misma fila, pero de una <strong>columna fija</strong> que tú indicas con un número.</div>
+        <div style="margin-top:10px" class="step-formula">=BUSCARV("Lima"; A:Q; 5; FALSO)</div>
+      </div>
+      <div class="card accent-top2">
+        <div class="card-icon">⚠️</div>
+        <div class="card-label">EL PROBLEMA</div>
+        <div class="card-title blue">Columna fija = limitación</div>
+        <div class="card-body">Si quieres buscar <strong>Enero</strong> usas columna 2, <strong>Febrero</strong> columna 3… tienes que cambiar el número manualmente cada vez.</div>
+        <div style="margin-top:10px" class="step-formula" style="color:#f87171">=BUSCARV("Lima"; A:Q; <span style="color:#f87171">?</span>; FALSO)</div>
+      </div>
+    </div>
+
+    <div class="card" style="border-color: rgba(250,204,21,.3); background: rgba(250,204,21,.04);">
+      <div style="display:flex;align-items:center;gap:12px">
+        <span style="font-size:24px">💡</span>
+        <div>
+          <div style="font-weight:700;margin-bottom:4px">La solución: usar <span style="color:var(--accent2)">COINCIDIR</span> como indicador de columna</div>
+          <div style="font-size:13px;color:var(--text-muted)">COINCIDIR calcula automáticamente en qué columna está el mes que buscas. Así el indicador de columna de BUSCARV se vuelve <strong>dinámico</strong>.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="three-col">
+      <div style="text-align:center;padding:14px;background:var(--surface);border-radius:8px;border:1px solid var(--border)">
+        <div style="font-size:22px;margin-bottom:6px">🗓️</div>
+        <div style="font-size:12px;color:var(--text-muted)">13 columnas de meses<br>+ encabezados</div>
+      </div>
+      <div style="text-align:center;padding:14px;background:var(--surface);border-radius:8px;border:1px solid var(--border)">
+        <div style="font-size:22px;margin-bottom:6px">🏙️</div>
+        <div style="font-size:12px;color:var(--text-muted)">25 filas de ciudades</div>
+      </div>
+      <div style="text-align:center;padding:14px;background:var(--surface);border-radius:8px;border:1px solid var(--border)">
+        <div style="font-size:22px;margin-bottom:6px">📊</div>
+        <div style="font-size:12px;color:var(--text-muted)">325 combinaciones posibles</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ SLIDE 3: COINCIDIR ══ -->
+  <div class="slide" id="slide-2">
+    <div class="slide-tag">02 — FUNCIÓN COINCIDIR</div>
+    <div class="slide-title">Entendiendo <span>COINCIDIR</span></div>
+    <div class="slide-subtitle">Devuelve la posición de un elemento dentro de un rango. Simple pero poderosa.</div>
+
+    <div class="formula-box" style="margin-bottom:20px">
+      <div class="formula-label">SINTAXIS</div>
+      =<span class="fn-name">COINCIDIR</span><span class="sep">(</span><span class="ref">valor_buscado</span><span class="sep">; </span><span class="ref">matriz_buscada</span><span class="sep">; </span><span class="kw">tipo_de_coincidencia</span><span class="sep">)</span>
+    </div>
+
+    <div class="three-col">
+      <div class="card accent-top">
+        <div class="card-label">ARGUMENTO 1</div>
+        <div class="card-title">valor_buscado</div>
+        <div class="card-body">El mes que quieres encontrar. Referencia la celda donde el usuario escribirá el mes.<br><br><span class="tag green">Ej: C4 → "Abril"</span></div>
+      </div>
+      <div class="card accent-top2">
+        <div class="card-label">ARGUMENTO 2</div>
+        <div class="card-title blue">matriz_buscada</div>
+        <div class="card-body">La fila de encabezados donde están los meses. <strong>Incluye el título</strong> para que el número coincida con BUSCARV.<br><br><span class="tag blue">Ej: E2:Q2</span></div>
+      </div>
+      <div class="card accent-top3">
+        <div class="card-label">ARGUMENTO 3</div>
+        <div class="card-title yellow">tipo_coincidencia</div>
+        <div class="card-body">Escribe siempre <strong>0</strong> para coincidencia exacta. Así no hay errores por datos similares.<br><br><span class="tag yellow">Siempre: 0</span></div>
+      </div>
+    </div>
+
+    <div class="formula-box">
+      <div class="formula-label">EJEMPLO</div>
+      =<span class="fn-name2">COINCIDIR</span><span class="sep">(</span><span class="ref">C4</span><span class="sep">; </span><span class="ref">E2:Q2</span><span class="sep">; </span><span class="kw">0</span><span class="sep">)</span>
+    </div>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">📍</div>
+        <div class="step-body">
+          <div class="step-title">¿Qué devuelve exactamente?</div>
+          <div class="step-desc">Si buscas <strong>"Abril"</strong> y los meses van de Enero a Diciembre, pero incluiste el título (Ciudad) en la selección, COINCIDIR devuelve <strong>5</strong>: el título cuenta como posición 1, luego Enero=2, Febrero=3, Marzo=4, Abril=5.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">⚠️</div>
+        <div class="step-body">
+          <div class="step-title">¿Por qué incluir el encabezado de fila?</div>
+          <div class="step-desc">Porque en BUSCARV la primera columna es la de ciudades (posición 1). Si no incluyes el encabezado en COINCIDIR, los números no coincidirían y obtendrías datos incorrectos.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ SLIDE 4: BUSCARV + COINCIDIR ══ -->
+  <div class="slide" id="slide-3">
+    <div class="slide-tag">03 — COMBINACIÓN</div>
+    <div class="slide-title">BUSCARV con <span>COINCIDIR</span> anidado</div>
+    <div class="slide-subtitle">COINCIDIR reemplaza el número fijo de columna en BUSCARV.</div>
+
+    <div class="formula-box" style="margin-bottom:20px; font-size:14px">
+      <div class="formula-label">FÓRMULA COMPLETA</div>
+      =<span class="fn-name">BUSCARV</span><span class="sep">(</span><span class="ref">B4</span><span class="sep">; </span><span class="ref">E2:Q26</span><span class="sep">; </span><span class="fn-name2">COINCIDIR</span><span class="sep">(</span><span class="ref">C4</span><span class="sep">; </span><span class="ref">E2:Q2</span><span class="sep">; </span><span class="kw">0</span><span class="sep">); </span><span class="kw">FALSO</span><span class="sep">)</span>
+    </div>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">01</div>
+        <div class="step-body">
+          <div class="step-title">valor_buscado → <span style="color:var(--accent3)">B4</span></div>
+          <div class="step-desc">La celda donde el usuario escribe (o selecciona) la <strong>ciudad</strong>. BUSCARV la buscará en la primera columna de la tabla.</div>
+          <span class="step-formula">B4 = "Lima"</span>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">02</div>
+        <div class="step-body">
+          <div class="step-title">matriz_tabla → <span style="color:var(--accent3)">E2:Q26</span></div>
+          <div class="step-desc">Toda la tabla de datos, <strong>incluyendo encabezados</strong> de fila y columna. La primera columna (E) debe ser la de ciudades.</div>
+          <span class="step-formula">E2:Q26 = tabla completa con headers</span>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">03</div>
+        <div class="step-body">
+          <div class="step-title">indicador_columnas → <span style="color:var(--accent2)">COINCIDIR(C4; E2:Q2; 0)</span></div>
+          <div class="step-desc">En vez de un número fijo, ponemos COINCIDIR que calcula dinámicamente la posición del mes que buscamos. Si el usuario elige "Abril" → devuelve 5.</div>
+          <span class="step-formula">COINCIDIR("Abril"; E2:Q2; 0) → 5</span>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">04</div>
+        <div class="step-body">
+          <div class="step-title">rango → <span style="color:var(--accent)">FALSO</span></div>
+          <div class="step-desc">Siempre escribe FALSO para obtener una <strong>coincidencia exacta</strong>. Si la ciudad no existe en la tabla, mostrará #N/A en lugar de un dato incorrecto.</div>
+          <span class="step-formula">FALSO = coincidencia exacta obligatoria</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ SLIDE 5: DEMO INTERACTIVO ══ -->
+  <div class="slide" id="slide-4">
+    <div class="slide-tag">04 — DEMO INTERACTIVO</div>
+    <div class="slide-title">Pruébalo tú <span>mismo</span></div>
+    <div class="slide-subtitle">Selecciona ciudad y mes para ver cómo funciona la fórmula en tiempo real.</div>
+
+    <div class="demo-wrap">
+      <div class="demo-left">
+        <div class="input-group">
+          <label>🏙️ B4 — CIUDAD</label>
+          <select id="sel-ciudad" onchange="calcDemo()">
+            <option value="">— Selecciona una ciudad —</option>
+            <option>Lima</option>
+            <option>Bogotá</option>
+            <option>Buenos Aires</option>
+            <option>Santiago</option>
+            <option>Quito</option>
+            <option>México DF</option>
+          </select>
+        </div>
+        <div class="input-group">
+          <label>🗓️ C4 — MES</label>
+          <select id="sel-mes" onchange="calcDemo()">
+            <option value="">— Selecciona un mes —</option>
+            <option>Enero</option>
+            <option>Febrero</option>
+            <option>Marzo</option>
+            <option>Abril</option>
+            <option>Mayo</option>
+            <option>Junio</option>
+          </select>
+        </div>
+
+        <div class="result-box" id="result-box">
+          <div class="result-label">VENTAS ENCONTRADAS</div>
+          <div class="result-value" id="result-val">—</div>
+          <div class="result-unit" id="result-unit">Selecciona ciudad y mes</div>
+        </div>
+
+        <div class="live-formula" id="live-formula">
+          =BUSCARV(<span class="dyn" id="lf-city">B4</span>; E2:Q26; COINCIDIR(<span class="dyn" id="lf-mes">C4</span>; E2:Q2; 0); FALSO)
+        </div>
+      </div>
+
+      <div class="demo-right">
+        <div style="font-size:11px;color:var(--text-muted);letter-spacing:1.5px;margin-bottom:6px;font-family:'Space Mono',monospace">TABLA DE VENTAS (USD)</div>
+        <div class="mini-table-wrap">
+          <table class="mini-table" id="demo-table">
+            <thead>
+              <tr>
+                <th>Ciudad</th>
+                <th id="th-0">Enero</th>
+                <th id="th-1">Febrero</th>
+                <th id="th-2">Marzo</th>
+                <th id="th-3">Abril</th>
+                <th id="th-4">Mayo</th>
+                <th id="th-5">Junio</th>
+              </tr>
+            </thead>
+            <tbody id="demo-tbody"></tbody>
+          </table>
+        </div>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:8px;font-family:'Space Mono',monospace">
+          <span style="color:var(--accent)">■</span> Fila buscada &nbsp;&nbsp;
+          <span style="color:var(--accent2)">■</span> Columna buscada &nbsp;&nbsp;
+          <span style="color:var(--accent)">■■</span> Resultado
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ SLIDE 6: RESUMEN ══ -->
+  <div class="slide" id="slide-5">
+    <div class="slide-tag">05 — RESUMEN</div>
+    <div class="slide-title">Lo que <span>aprendiste</span> hoy</div>
+    <div class="slide-subtitle">Tres conceptos clave para dominar la búsqueda bidimensional.</div>
+
+    <div class="three-col" style="margin-bottom:18px">
+      <div class="card accent-top" style="text-align:center">
+        <div style="font-size:32px;margin-bottom:10px">🔍</div>
+        <div class="card-label">BUSCARV</div>
+        <div class="card-title">Busca por fila</div>
+        <div class="card-body">Localiza el valor en la primera columna y devuelve datos de esa misma fila.</div>
+      </div>
+      <div class="card accent-top2" style="text-align:center">
+        <div style="font-size:32px;margin-bottom:10px">📌</div>
+        <div class="card-label">COINCIDIR</div>
+        <div class="card-title blue">Posición dinámica</div>
+        <div class="card-body">Calcula automáticamente el número de columna según el valor que buscamos.</div>
+      </div>
+      <div class="card accent-top3" style="text-align:center">
+        <div style="font-size:32px;margin-bottom:10px">⚡</div>
+        <div class="card-label">JUNTAS</div>
+        <div class="card-title yellow">Búsqueda 2D</div>
+        <div class="card-body">Una sola fórmula que localiza cualquier celda por fila Y columna sin tocar el número.</div>
+      </div>
+    </div>
+
+    <div class="formula-box" style="font-size:15px;margin-bottom:18px">
+      <div class="formula-label">FÓRMULA MAESTRA — CÓPIALA</div>
+      =<span class="fn-name">BUSCARV</span><span class="sep">(</span><span class="ref">B4</span><span class="sep">; </span><span class="ref">E2:Q26</span><span class="sep">; </span><span class="fn-name2">COINCIDIR</span><span class="sep">(</span><span class="ref">C4</span><span class="sep">; </span><span class="ref">E2:Q2</span><span class="sep">; </span><span class="kw">0</span><span class="sep">); </span><span class="kw">FALSO</span><span class="sep">)</span>
+    </div>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">💡</div>
+        <div class="step-body">
+          <div class="step-title">Tip PRO: Añade listas desplegables</div>
+          <div class="step-desc">Usa <strong>Datos → Validación de datos → Lista</strong> en las celdas B4 y C4 para que el usuario elija ciudad y mes con un clic, sin errores de escritura.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">🚀</div>
+        <div class="step-body">
+          <div class="step-title">¿Quieres ir más lejos? Prueba XLOOKUP</div>
+          <div class="step-desc">Si usas Excel 365, la función <strong>BUSCARX</strong> (XLOOKUP) puede reemplazar esta combinación con una sintaxis más simple. ¡El siguiente paso natural!</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ══ SLIDE 7: SI.ERROR ══ -->
+  <div class="slide" id="slide-6">
+    <div class="slide-tag">06 — CONTROL DE ERRORES</div>
+    <div class="slide-title">Función <span>SI.ERROR</span></div>
+    <div class="slide-subtitle">Captura errores y los reemplaza por mensajes útiles. Hoja limpia, sin sorpresas.</div>
+
+    <div class="formula-box" style="font-size:14px;margin-bottom:18px">
+      <div class="formula-label">SINTAXIS</div>
+      =<span class="fn-name">SI.ERROR</span><span class="sep">(</span><span class="ref">valor</span><span class="sep">; </span><span class="kw">valor_si_error</span><span class="sep">)</span>
+    </div>
+
+    <div class="two-col" style="margin-bottom:16px">
+      <div class="card accent-top">
+        <div class="card-icon">✅</div>
+        <div class="card-label">SIN ERROR</div>
+        <div class="card-title">Devuelve el resultado normal</div>
+        <div class="card-body">Si la fórmula interna funciona correctamente, SI.ERROR simplemente muestra el resultado como si no estuviera. No interfiere en nada.</div>
+        <div class="step-formula" style="margin-top:10px;color:var(--accent)">=SI.ERROR(BUSCARV(...); "—") → $14,200</div>
+      </div>
+      <div class="card accent-top2">
+        <div class="card-icon">🚨</div>
+        <div class="card-label">CON ERROR</div>
+        <div class="card-title blue">Muestra tu mensaje personalizado</div>
+        <div class="card-body">Si la fórmula genera un error (#N/A, #DIV/0!, #REF!, etc.), SI.ERROR lo intercepta y muestra el texto o valor que tú definas.</div>
+        <div class="step-formula" style="margin-top:10px;color:var(--accent2)">=SI.ERROR(BUSCARV(...); "No encontrado")</div>
+      </div>
+    </div>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">⚠️</div>
+        <div class="step-body">
+          <div class="step-title">¿Qué errores captura?</div>
+          <div class="step-desc">Captura todos los tipos: <strong>#N/A</strong> (valor no encontrado), <strong>#DIV/0!</strong> (división entre cero), <strong>#REF!</strong> (referencia inválida), <strong>#VALOR!</strong>, <strong>#NUM!</strong> y más.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">💬</div>
+        <div class="step-body">
+          <div class="step-title">Ejemplos de mensajes útiles</div>
+          <div class="step-desc">
+            <span class="tag yellow" style="margin-right:6px;margin-bottom:4px;display:inline-block">"El valor ingresado no es válido"</span>
+            <span class="tag green" style="margin-right:6px;margin-bottom:4px;display:inline-block">"Ingrese los datos correctamente"</span>
+            <span class="tag blue" style="margin-bottom:4px;display:inline-block">"El valor debe ser diferente de cero"</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Demo interactivo SI.ERROR -->
+    <div class="divider"></div>
+    <div style="font-size:11px;color:var(--text-muted);letter-spacing:1.5px;margin-bottom:10px;font-family:'Space Mono',monospace">DEMO INTERACTIVO — PRUEBA LOS CASOS</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
+      <div class="card" id="sierr-c1" style="cursor:pointer;border-color:var(--accent);text-align:center" onclick="showSiError('ok')">
+        <div style="font-size:20px;margin-bottom:6px">🔍</div>
+        <div style="font-size:12px;font-weight:700;margin-bottom:4px">Ciudad: "Lima"</div>
+        <div style="font-size:11px;color:var(--text-muted)">Valor existe en tabla</div>
+        <div style="margin-top:8px" class="step-formula" id="sierr-r1">→ haz clic</div>
+      </div>
+      <div class="card" id="sierr-c2" style="cursor:pointer;text-align:center" onclick="showSiError('nf')">
+        <div style="font-size:20px;margin-bottom:6px">❓</div>
+        <div style="font-size:12px;font-weight:700;margin-bottom:4px">Ciudad: "Caracas"</div>
+        <div style="font-size:11px;color:var(--text-muted)">No existe en tabla → #N/A</div>
+        <div style="margin-top:8px" class="step-formula" id="sierr-r2">→ haz clic</div>
+      </div>
+      <div class="card" id="sierr-c3" style="cursor:pointer;text-align:center" onclick="showSiError('div')">
+        <div style="font-size:20px;margin-bottom:6px">➗</div>
+        <div style="font-size:12px;font-weight:700;margin-bottom:4px">División entre 0</div>
+        <div style="font-size:11px;color:var(--text-muted)">Error #DIV/0!</div>
+        <div style="margin-top:8px" class="step-formula" id="sierr-r3">→ haz clic</div>
+      </div>
+    </div>
+    <div id="sierr-result" style="display:none;margin-top:12px;padding:14px 18px;background:var(--surface);border-radius:8px;border-left:3px solid var(--accent);font-family:'Space Mono',monospace;font-size:13px"></div>
+  </div>
+
+  <!-- ══ SLIDE 8: ELIMINAR DUPLICADOS ══ -->
+  <div class="slide" id="slide-7">
+    <div class="slide-tag">07 — LIMPIEZA DE DATOS</div>
+    <div class="slide-title">Eliminar <span>Duplicados</span></div>
+    <div class="slide-subtitle">Una herramienta para limpiar datos repetidos en segundos. Sin fórmulas, sin complicaciones.</div>
+
+    <div class="two-col" style="margin-bottom:16px">
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);letter-spacing:1.5px;margin-bottom:8px;font-family:'Space Mono',monospace">📋 ANTES — CON DUPLICADOS</div>
+        <div class="excel-wrap">
+          <table class="excel-table">
+            <thead><tr><th>A</th><th>B</th><th>C</th></tr></thead>
+            <tbody>
+              <tr><td style="text-align:left">Nombre</td><td>Ciudad</td><td>Ventas</td></tr>
+              <tr><td style="text-align:left">Ana López</td><td>Lima</td><td>$1,200</td></tr>
+              <tr class="dup-row"><td style="text-align:left;color:#f87171">Ana López</td><td style="color:#f87171">Lima</td><td style="color:#f87171">$1,200</td></tr>
+              <tr><td style="text-align:left">Juan Pérez</td><td>Bogotá</td><td>$3,400</td></tr>
+              <tr class="dup-row"><td style="text-align:left;color:#f87171">Juan Pérez</td><td style="color:#f87171">Bogotá</td><td style="color:#f87171">$3,400</td></tr>
+              <tr><td style="text-align:left">María Gil</td><td>Quito</td><td>$2,100</td></tr>
+              <tr class="dup-row"><td style="text-align:left;color:#f87171">Ana López</td><td style="color:#f87171">Lima</td><td style="color:#f87171">$1,200</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div style="font-size:11px;margin-top:6px;color:#f87171;font-family:'Space Mono',monospace">⚠ 3 filas duplicadas detectadas</div>
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);letter-spacing:1.5px;margin-bottom:8px;font-family:'Space Mono',monospace">✅ DESPUÉS — DATOS ÚNICOS</div>
+        <div class="excel-wrap">
+          <table class="excel-table">
+            <thead><tr><th>A</th><th>B</th><th>C</th></tr></thead>
+            <tbody>
+              <tr><td style="text-align:left">Nombre</td><td>Ciudad</td><td>Ventas</td></tr>
+              <tr><td style="text-align:left" class="hl">Ana López</td><td class="hl">Lima</td><td class="hl">$1,200</td></tr>
+              <tr><td style="text-align:left" class="hl">Juan Pérez</td><td class="hl">Bogotá</td><td class="hl">$3,400</td></tr>
+              <tr><td style="text-align:left" class="hl">María Gil</td><td class="hl">Quito</td><td class="hl">$2,100</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div style="font-size:11px;margin-top:6px;color:var(--accent);font-family:'Space Mono',monospace">✓ 3 registros únicos conservados</div>
+      </div>
+    </div>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">01</div>
+        <div class="step-body">
+          <div class="step-title">Selecciona cualquier celda dentro de tu tabla</div>
+          <div class="step-desc">Excel detectará automáticamente el rango de datos. También puedes seleccionar el rango manualmente antes de continuar.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">02</div>
+        <div class="step-body">
+          <div class="step-title">Ve a Datos → Quitar duplicados</div>
+          <div class="step-desc">En la cinta de opciones, pestaña <strong>Datos</strong>, grupo <em>Herramientas de datos</em>, haz clic en <strong>Quitar duplicados</strong>.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">03</div>
+        <div class="step-body">
+          <div class="step-title">Elige las columnas para detectar duplicados</div>
+          <div class="step-desc">Marca solo las columnas que deben coincidir para considerar una fila como duplicada. Puedes basarte en una columna (ej: solo Email) o en varias a la vez.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">💡</div>
+        <div class="step-body">
+          <div class="step-title">Tip PRO: Haz una copia antes</div>
+          <div class="step-desc">Esta operación es <strong>irreversible</strong> (salvo Ctrl+Z inmediato). Siempre guarda una copia de tus datos originales antes de eliminar duplicados.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ SLIDE 9: TEXTO A COLUMNAS ══ -->
+  <div class="slide" id="slide-8">
+    <div class="slide-tag">08 — TRANSFORMACIÓN DE DATOS</div>
+    <div class="slide-title">Texto a <span>Columnas</span></div>
+    <div class="slide-subtitle">Divide el contenido de una celda en varias columnas usando un separador o por ancho fijo.</div>
+
+    <div class="two-col" style="margin-bottom:16px">
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);letter-spacing:1.5px;margin-bottom:8px;font-family:'Space Mono',monospace">📋 ANTES — TODO EN UNA CELDA</div>
+        <div class="excel-wrap">
+          <table class="excel-table">
+            <thead><tr><th>A</th></tr></thead>
+            <tbody>
+              <tr><td style="text-align:left;color:var(--accent2)">Nombre completo</td></tr>
+              <tr><td style="text-align:left">Ana López Lima</td></tr>
+              <tr><td style="text-align:left">Juan Pérez Bogotá</td></tr>
+              <tr><td style="text-align:left">María Gil Quito</td></tr>
+              <tr><td style="text-align:left">Carlos Ruiz Santiago</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);letter-spacing:1.5px;margin-bottom:8px;font-family:'Space Mono',monospace">✅ DESPUÉS — DATOS SEPARADOS</div>
+        <div class="excel-wrap">
+          <table class="excel-table">
+            <thead><tr><th>A</th><th>B</th><th>C</th></tr></thead>
+            <tbody>
+              <tr><td style="text-align:left;color:var(--accent2)">Nombre</td><td style="color:var(--accent2)">Apellido</td><td style="color:var(--accent2)">Ciudad</td></tr>
+              <tr><td style="text-align:left" class="hl">Ana</td><td class="hl">López</td><td class="hl">Lima</td></tr>
+              <tr><td style="text-align:left" class="hl">Juan</td><td class="hl">Pérez</td><td class="hl">Bogotá</td></tr>
+              <tr><td style="text-align:left" class="hl">María</td><td class="hl">Gil</td><td class="hl">Quito</td></tr>
+              <tr><td style="text-align:left" class="hl">Carlos</td><td class="hl">Ruiz</td><td class="hl">Santiago</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="two-col" style="margin-bottom:14px">
+      <div class="card accent-top">
+        <div class="card-icon">📌</div>
+        <div class="card-label">OPCIÓN 1</div>
+        <div class="card-title">Delimitado</div>
+        <div class="card-body">Divide el texto usando un carácter especial como separador: <strong>coma</strong>, <strong>punto y coma</strong>, <strong>espacio</strong>, <strong>tabulación</strong> o cualquier carácter personalizado.</div>
+        <div class="step-formula" style="margin-top:8px">"Ana,López,Lima" → 3 celdas</div>
+      </div>
+      <div class="card accent-top2">
+        <div class="card-icon">📏</div>
+        <div class="card-label">OPCIÓN 2</div>
+        <div class="card-title blue">Ancho fijo</div>
+        <div class="card-body">Divide el texto en posiciones fijas. Útil cuando los datos tienen longitud fija, como códigos postales, IDs o datos de sistemas legacy.</div>
+        <div class="step-formula" style="margin-top:8px">"LIM001" → "LIM" + "001"</div>
+      </div>
+    </div>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">🛣️</div>
+        <div class="step-body">
+          <div class="step-title">Cómo acceder: Datos → Texto en columnas</div>
+          <div class="step-desc">Selecciona la columna con los datos → pestaña <strong>Datos</strong> → <strong>Texto en columnas</strong>. Se abrirá un asistente de 3 pasos que te guía paso a paso.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">💡</div>
+        <div class="step-body">
+          <div class="step-title">Deja espacio para las columnas nuevas</div>
+          <div class="step-desc">Excel sobrescribirá las columnas a la derecha. Asegúrate de que estén vacías antes de aplicar, o inserta columnas nuevas primero.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ SLIDE 10: AGRUPAR ══ -->
+  <div class="slide" id="slide-9">
+    <div class="slide-tag">09 — ORGANIZACIÓN DE DATOS</div>
+    <div class="slide-title">Agrupar filas y <span>columnas</span></div>
+    <div class="slide-subtitle">Colapsa y expande secciones de tu hoja para visualizar solo lo que necesitas.</div>
+
+    <div class="two-col" style="margin-bottom:16px">
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);letter-spacing:1.5px;margin-bottom:8px;font-family:'Space Mono',monospace">📋 SIN AGRUPAR — TODO VISIBLE</div>
+        <div class="excel-wrap">
+          <table class="excel-table">
+            <thead><tr><th></th><th>A</th><th>B</th><th>C</th></tr></thead>
+            <tbody>
+              <tr><td style="color:var(--text-muted);font-family:'Space Mono',monospace;font-size:10px">1</td><td style="text-align:left;color:var(--accent2)">Región Norte</td><td></td><td></td></tr>
+              <tr><td style="color:var(--text-muted);font-family:'Space Mono',monospace;font-size:10px">2</td><td style="text-align:left">Lima</td><td>$14,200</td><td>Q1</td></tr>
+              <tr><td style="color:var(--text-muted);font-family:'Space Mono',monospace;font-size:10px">3</td><td style="text-align:left">Trujillo</td><td>$8,900</td><td>Q1</td></tr>
+              <tr><td style="color:var(--text-muted);font-family:'Space Mono',monospace;font-size:10px">4</td><td style="text-align:left">Piura</td><td>$6,700</td><td>Q1</td></tr>
+              <tr><td style="color:var(--text-muted);font-family:'Space Mono',monospace;font-size:10px">5</td><td style="text-align:left;color:var(--accent2)">Región Sur</td><td></td><td></td></tr>
+              <tr><td style="color:var(--text-muted);font-family:'Space Mono',monospace;font-size:10px">6</td><td style="text-align:left">Arequipa</td><td>$11,300</td><td>Q1</td></tr>
+              <tr><td style="color:var(--text-muted);font-family:'Space Mono',monospace;font-size:10px">7</td><td style="text-align:left">Cusco</td><td>$9,100</td><td>Q1</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);letter-spacing:1.5px;margin-bottom:8px;font-family:'Space Mono',monospace">✅ CON GRUPOS COLAPSADOS</div>
+        <div class="excel-wrap">
+          <table class="excel-table">
+            <thead><tr><th></th><th>A</th><th>B</th><th>C</th><th style="width:30px;background:rgba(74,222,128,.1);color:var(--accent)">+</th></tr></thead>
+            <tbody>
+              <tr><td style="color:var(--text-muted);font-family:'Space Mono',monospace;font-size:10px">1</td><td style="text-align:left;color:var(--accent2)" class="hl">Región Norte</td><td class="hl">$29,800</td><td class="hl">Total</td><td style="color:var(--accent);font-weight:700;text-align:center">▶</td></tr>
+              <tr><td style="color:var(--text-muted);font-family:'Space Mono',monospace;font-size:10px">5</td><td style="text-align:left;color:var(--accent2)" class="hl">Región Sur</td><td class="hl">$20,400</td><td class="hl">Total</td><td style="color:var(--accent);font-weight:700;text-align:center">▶</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div style="font-size:11px;margin-top:6px;color:var(--accent);font-family:'Space Mono',monospace">▶ Haz clic en + para expandir cada grupo</div>
+      </div>
+    </div>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">01</div>
+        <div class="step-body">
+          <div class="step-title">Selecciona las filas o columnas a agrupar</div>
+          <div class="step-desc">Selecciona las filas de detalle (las que quieres ocultar). Por ejemplo, las filas 2, 3 y 4 del grupo Norte. <strong>No incluyas la fila de título ni el total.</strong></div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">02</div>
+        <div class="step-body">
+          <div class="step-title">Datos → Agrupar → Agrupar</div>
+          <div class="step-desc">En la pestaña <strong>Datos</strong>, grupo <em>Esquema</em>, haz clic en <strong>Agrupar</strong>. Aparecerán los controles <strong>[−]</strong> y <strong>[+]</strong> en el margen izquierdo o superior.</div>
+          <span class="step-formula">Atajo: Alt + Mayús + → (agrupar) / Alt + Mayús + ← (desagrupar)</span>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">03</div>
+        <div class="step-body">
+          <div class="step-title">Usa los botones de nivel 1 · 2 · 3</div>
+          <div class="step-desc">En la esquina superior izquierda aparecen botones de nivel. El <strong>nivel 1</strong> muestra solo totales, el <strong>nivel 2</strong> muestra los grupos, el <strong>nivel 3</strong> muestra todo el detalle.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">💡</div>
+        <div class="step-body">
+          <div class="step-title">Subtotal automático: úsalo junto con Agrupar</div>
+          <div class="step-desc"><strong>Datos → Subtotal</strong> crea automáticamente grupos y calcula sumas, promedios u otras funciones por categoría. ¡Dos herramientas que se complementan perfectamente!</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /slides-wrapper -->
+
+<div class="bottombar">
+  <button class="nav-btn" id="btn-prev" onclick="changeSlide(-1)" disabled>← Anterior</button>
+  <div class="dots" id="dots"></div>
+  <button class="nav-btn primary" id="btn-next" onclick="changeSlide(1)">Siguiente →</button>
+</div>
+
+<script>
+  // ── DATA ──
+  const CITIES = ["Lima","Bogotá","Buenos Aires","Santiago","Quito","México DF"];
+  const MONTHS = ["Enero","Febrero","Marzo","Abril","Mayo","Junio"];
+
+  // Seed deterministic sales data
+  function seed(city, month) {
+    const c = CITIES.indexOf(city), m = MONTHS.indexOf(month);
+    const vals = [
+      [14200,18300,12500,22100,19800,15600],
+      [9800,11200,14300,8900,16700,13400],
+      [21500,19800,23400,17600,28900,24100],
+      [7600,9100,11800,13200,10400,8700],
+      [5400,6200,7800,9500,8100,6900],
+      [32100,28700,35600,41200,38900,29800],
+    ];
+    return vals[c][m];
+  }
+
+  // Build table
+  function buildTable(selCity, selMonth) {
+    const tbody = document.getElementById('demo-tbody');
+    tbody.innerHTML = '';
+    const cityIdx = CITIES.indexOf(selCity);
+    const monthIdx = MONTHS.indexOf(selMonth);
+
+    for (let i = 0; i < CITIES.length; i++) {
+      const tr = document.createElement('tr');
+      const tdCity = document.createElement('td');
+      tdCity.textContent = CITIES[i];
+      if (i === cityIdx) tdCity.classList.add('hrow');
+      tr.appendChild(tdCity);
+      for (let j = 0; j < MONTHS.length; j++) {
+        const td = document.createElement('td');
+        const v = seed(CITIES[i], MONTHS[j]);
+        td.textContent = '$' + v.toLocaleString();
+        if (i === cityIdx && j === monthIdx) td.classList.add('hres');
+        else if (i === cityIdx) td.classList.add('hrow');
+        else if (j === monthIdx) td.classList.add('hcol');
+        tr.appendChild(td);
+      }
+      tbody.appendChild(tr);
+    }
+
+    // highlight headers
+    for (let j = 0; j < MONTHS.length; j++) {
+      const th = document.getElementById('th-' + j);
+      th.style.color = j === monthIdx ? 'var(--accent2)' : '';
+      th.style.background = j === monthIdx ? 'rgba(250,204,21,.15)' : '';
+    }
+  }
+
+  function calcDemo() {
+    const city = document.getElementById('sel-ciudad').value;
+    const mes = document.getElementById('sel-mes').value;
+
+    // live formula
+    document.getElementById('lf-city').textContent = city || 'B4';
+    document.getElementById('lf-mes').textContent = mes || 'C4';
+
+    if (city && mes) {
+      const val = seed(city, mes);
+      const box = document.getElementById('result-box');
+      const rv = document.getElementById('result-val');
+      const ru = document.getElementById('result-unit');
+      rv.textContent = '$' + val.toLocaleString();
+      ru.textContent = city + ' — ' + mes;
+      box.classList.add('has-result');
+      buildTable(city, mes);
+    } else {
+      document.getElementById('result-box').classList.remove('has-result');
+      document.getElementById('result-val').textContent = '—';
+      document.getElementById('result-unit').textContent = 'Selecciona ciudad y mes';
+      buildTable('', '');
+    }
+  }
+
+  // init table
+  buildTable('', '');
+
+  // ── SI.ERROR DEMO ──
+  function showSiError(type) {
+    const cases = {
+      ok: {
+        formula: '=SI.ERROR(BUSCARV("Lima"; E2:Q26; COINCIDIR("Enero"; E2:Q2; 0); FALSO); "Ciudad no encontrada")',
+        result: '✅ Resultado: <span style="color:var(--accent)">$14,200</span> — La fórmula funciona, SI.ERROR no interviene.',
+        card: 'sierr-c1', r: 'sierr-r1', rtext: '→ $14,200', color: 'var(--accent)'
+      },
+      nf: {
+        formula: '=SI.ERROR(BUSCARV("Caracas"; E2:Q26; COINCIDIR("Enero"; E2:Q2; 0); FALSO); "Ciudad no encontrada")',
+        result: '⚠️ BUSCARV daría <span style="color:#f87171">#N/A</span> — SI.ERROR lo captura y muestra: <span style="color:var(--accent2)">"Ciudad no encontrada"</span>',
+        card: 'sierr-c2', r: 'sierr-r2', rtext: '→ "Ciudad no encontrada"', color: 'var(--accent2)'
+      },
+      div: {
+        formula: '=SI.ERROR(A1/0; "El divisor no puede ser cero")',
+        result: '⚠️ A1/0 daría <span style="color:#f87171">#DIV/0!</span> — SI.ERROR lo captura y muestra: <span style="color:var(--accent2)">"El divisor no puede ser cero"</span>',
+        card: 'sierr-c3', r: 'sierr-r3', rtext: '→ "Divisor inválido"', color: '#f87171'
+      }
+    };
+    const c = cases[type];
+    ['sierr-c1','sierr-c2','sierr-c3'].forEach(id => {
+      document.getElementById(id).style.borderColor = 'var(--border)';
+    });
+    document.getElementById(c.card).style.borderColor = c.color;
+    document.getElementById(c.r).textContent = c.rtext;
+    document.getElementById(c.r).style.color = c.color;
+    const res = document.getElementById('sierr-result');
+    res.style.display = 'block';
+    res.style.borderLeftColor = c.color;
+    res.innerHTML = '<div style="color:var(--text-muted);font-size:10px;letter-spacing:1px;margin-bottom:6px">FÓRMULA</div><div style="color:var(--accent3);margin-bottom:10px">' + c.formula + '</div><div style="font-size:13px;font-family:Sora,sans-serif">' + c.result + '</div>';
+  }
+
+  // ── SLIDES NAV ──
+  const TOTAL = 10;
+  let current = 0;
+  let animating = false;
+
+  const dotsEl = document.getElementById('dots');
+  for (let i = 0; i < TOTAL; i++) {
+    const d = document.createElement('div');
+    d.className = 'dot' + (i === 0 ? ' active' : '');
+    d.onclick = () => goTo(i);
+    dotsEl.appendChild(d);
+  }
+
+  function goTo(n) {
+    if (animating || n === current) return;
+    animating = true;
+    const prev = document.getElementById('slide-' + current);
+    const next = document.getElementById('slide-' + n);
+    const dir = n > current ? 1 : -1;
+
+    prev.style.transition = 'opacity .35s ease, transform .35s ease';
+    prev.style.opacity = '0';
+    prev.style.transform = `translateX(${dir * -60}px)`;
+
+    setTimeout(() => {
+      prev.classList.remove('active');
+      prev.style.transition = '';
+      prev.style.opacity = '';
+      prev.style.transform = '';
+
+      next.style.opacity = '0';
+      next.style.transform = `translateX(${dir * 60}px)`;
+      next.classList.add('active');
+
+      requestAnimationFrame(() => {
+        next.style.transition = 'opacity .35s ease, transform .35s ease';
+        next.style.opacity = '1';
+        next.style.transform = 'translateX(0)';
+        setTimeout(() => {
+          next.style.transition = '';
+          animating = false;
+        }, 360);
+      });
+    }, 350);
+
+    current = n;
+    document.getElementById('counter').textContent = (n + 1) + ' / ' + TOTAL;
+    document.getElementById('btn-prev').disabled = n === 0;
+    document.getElementById('btn-next').disabled = n === TOTAL - 1;
+    document.getElementById('btn-next').textContent = n === TOTAL - 1 ? '✓ Completado' : 'Siguiente →';
+    document.querySelectorAll('.dot').forEach((d, i) => d.classList.toggle('active', i === n));
+  }
+
+  function changeSlide(dir) { goTo(current + dir); }
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') changeSlide(1);
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') changeSlide(-1);
+  });
+</script>
+</body>
+</html>
