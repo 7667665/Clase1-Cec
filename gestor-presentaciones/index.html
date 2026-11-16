@@ -1,0 +1,1214 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gestor de Presentaciones · Ofimática · Nivelación SI-2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&family=Inter:wght@400;500;600;700&family=Merriweather:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --v:#076F3E; --vo:#0A4D2B; --vd:#062E1A; --ol:#798C52; --sa:#A3BA8C; --sc:#DCE5D4; --sx:#EEF3E8;
+  --r:#D10C0A; --o:#F2B705; --bg:#F7F9F3; --ink:#13241A; --mut:#56665A; --line:#cfd9c6;
+  --hf:'Archivo',system-ui,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden;background:#07170e;font-family:Inter,system-ui,sans-serif;color:var(--ink);-webkit-font-smoothing:antialiased}
+button{font:inherit;cursor:pointer;border:0;background:none;color:inherit}
+#viewport{position:fixed;inset:0;background:radial-gradient(1200px 700px at 20% 10%,#0f3a22 0%,#07170e 60%)}
+#stage{position:absolute;left:50%;top:50%;width:1280px;height:720px;background:var(--bg);overflow:hidden;border-radius:10px;box-shadow:0 30px 80px rgba(0,0,0,.55);transform-origin:center}
+
+/* ---------- slides ---------- */
+.slide{position:absolute;inset:0;opacity:0;visibility:hidden;transform:translateX(70px);transition:opacity .55s ease,transform .65s cubic-bezier(.2,.8,.2,1),visibility 0s .65s}
+.slide.back{transform:translateX(-70px)}
+.slide.active{opacity:1;visibility:visible;transform:none;transition:opacity .55s ease,transform .65s cubic-bezier(.2,.8,.2,1),visibility 0s}
+.slide .a{opacity:0}
+.slide.active .a{animation:rise .7s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(var(--i,0) * 70ms + 180ms)}
+@keyframes rise{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:none}}
+.topstrip{position:absolute;top:0;left:0;right:0;height:12px;background:linear-gradient(90deg,#fff 0%,var(--sc) 45%,var(--sa) 100%)}
+.hd{position:absolute;top:34px;left:64px;right:64px;display:flex;align-items:flex-end;justify-content:space-between;gap:24px}
+.kick{font:700 13px/1 var(--hf);letter-spacing:.18em;text-transform:uppercase;color:var(--v);display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.kick i{display:inline-grid;place-items:center;width:26px;height:26px;border-radius:50%;background:var(--v);color:#fff;font-style:normal;letter-spacing:0;font-size:13px}
+h2.t{font:800 44px/1.02 var(--hf);font-stretch:85%;letter-spacing:-.01em;color:var(--ink)}
+h2.t em{font-style:normal;color:var(--v)}
+.route{display:flex;gap:6px;align-items:center;font:600 12px/1 Inter;color:var(--mut);background:#fff;border:1px solid var(--line);padding:9px 12px;border-radius:999px;white-space:nowrap}
+.route b{color:var(--v)} .route span{opacity:.5}
+.bd{position:absolute;top:150px;left:64px;right:64px;bottom:70px}
+p.lead{font-size:19px;line-height:1.55;color:#2a3b2f}
+.hint{font-size:12.5px;color:var(--mut);display:flex;align-items:center;gap:8px}
+.hint:before{content:"";width:8px;height:8px;border-radius:50%;background:var(--o);box-shadow:0 0 0 4px rgba(242,183,5,.25);animation:blink 1.6s infinite}
+@keyframes blink{50%{box-shadow:0 0 0 8px rgba(242,183,5,0)}}
+.card{background:#fff;border:1px solid var(--line);border-radius:16px;box-shadow:0 6px 20px rgba(19,36,26,.06)}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:11px 18px;border-radius:10px;background:var(--v);color:#fff;font-weight:600;font-size:14px;transition:transform .15s,background .2s,box-shadow .2s}
+.btn:hover{background:var(--vo);transform:translateY(-1px);box-shadow:0 6px 16px rgba(7,111,62,.3)}
+.btn.ghost{background:#fff;color:var(--v);border:1.5px solid var(--v)}
+.btn.ghost:hover{background:var(--sx)}
+.btn:disabled{opacity:.4;pointer-events:none}
+.chip{padding:8px 14px;border-radius:999px;border:1.5px solid var(--line);background:#fff;font-size:13px;font-weight:600;color:#334;transition:all .2s}
+.chip:hover{border-color:var(--sa)}
+.chip.on{background:var(--v);border-color:var(--v);color:#fff}
+
+/* ---------- footer ---------- */
+#foot{position:absolute;left:0;right:0;bottom:0;height:46px;z-index:20;pointer-events:none}
+#foot .stripes{position:absolute;top:0;left:0;right:0;height:7px;background:linear-gradient(var(--r) 0 2px,var(--o) 2px 4px,var(--v) 4px 7px)}
+#foot .band{position:absolute;top:7px;bottom:0;left:0;right:0;background:linear-gradient(90deg,var(--sc),var(--sa));display:flex;align-items:center;padding:0 22px 0 64px;gap:14px;font:700 12px/1 var(--hf);letter-spacing:.08em;color:var(--vd)}
+#foot .band .sep{width:1px;height:14px;background:var(--vd);opacity:.4}
+#foot .brand{margin-left:auto;display:flex;align-items:center;gap:10px}
+#foot .brand b{font:900 22px/1 var(--hf);font-stretch:110%;color:var(--v);letter-spacing:.02em}
+#foot .brand small{font:600 8.5px/1.25 Inter;letter-spacing:.06em;color:var(--vd);text-transform:uppercase}
+#foot .num{font:700 13px/1 var(--hf);background:var(--v);color:#fff;padding:6px 10px;border-radius:6px;min-width:62px;text-align:center}
+
+/* ---------- UI chrome ---------- */
+#progress{position:fixed;top:0;left:0;height:4px;background:linear-gradient(90deg,var(--o),var(--v));z-index:50;transition:width .5s cubic-bezier(.2,.8,.2,1)}
+#ctrl{position:fixed;right:18px;bottom:18px;display:flex;gap:8px;z-index:50;transition:opacity .5s}
+body.idle #ctrl,body.idle #help{opacity:0;pointer-events:none}
+#help{transition:opacity .5s}
+#ctrl button{width:44px;height:44px;border-radius:12px;background:rgba(255,255,255,.1);color:#fff;backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.15);display:grid;place-items:center;transition:background .2s,transform .15s}
+#ctrl button:hover{background:var(--v);transform:translateY(-2px)}
+#ctrl button.on{background:var(--o);color:#222}
+#ctrl svg{width:20px;height:20px}
+#overview{position:fixed;inset:0;z-index:60;background:rgba(4,20,11,.92);backdrop-filter:blur(6px);display:none;padding:40px 48px;overflow:auto}
+#overview.open{display:block;animation:fadein .25s}
+@keyframes fadein{from{opacity:0}}
+#overview h3{color:#fff;font:800 28px var(--hf);margin-bottom:6px}
+#overview p{color:#a9bba0;margin-bottom:24px;font-size:14px}
+#ovgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:14px}
+.ov{background:#fff;border-radius:12px;padding:14px 16px 16px;text-align:left;position:relative;overflow:hidden;transition:transform .2s,box-shadow .2s;min-height:110px}
+.ov:hover{transform:translateY(-4px);box-shadow:0 12px 30px rgba(0,0,0,.4)}
+.ov.cur{outline:3px solid var(--o)}
+.ov .n{font:800 30px/1 var(--hf);color:var(--sa)}
+.ov .s{font:700 10px Inter;letter-spacing:.14em;text-transform:uppercase;color:var(--v);margin:8px 0 4px}
+.ov .tt{font:700 15px/1.25 var(--hf);color:var(--ink)}
+.ov:after{content:"";position:absolute;left:0;right:0;bottom:0;height:5px;background:var(--c,var(--v))}
+#help{position:fixed;left:18px;bottom:18px;z-index:50;color:#9fb79a;font-size:12px;display:flex;gap:14px;align-items:center}
+#help kbd{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:5px;padding:2px 6px;color:#fff;font:600 11px Inter}
+#laser{position:fixed;width:18px;height:18px;margin:-9px 0 0 -9px;border-radius:50%;background:radial-gradient(circle,#ff4a3d 0 35%,rgba(209,12,10,.35) 60%,transparent 70%);pointer-events:none;z-index:70;display:none;box-shadow:0 0 18px 6px rgba(209,12,10,.45)}
+body.laser{cursor:none} body.laser #laser{display:block}
+@media (max-width:760px){#help{display:none}}
+
+/* ---------- S1 portada ---------- */
+#s-portada{background:radial-gradient(900px 600px at 80% 20%,#0f6a3c 0%,var(--vd) 60%);color:#fff}
+#s-portada .fl{position:absolute;border-radius:10px;background:#fff;box-shadow:0 20px 40px rgba(0,0,0,.35);transition:transform .3s ease-out;overflow:hidden}
+#s-portada .fl .bar{height:16%;background:linear-gradient(90deg,#fff,var(--sa))}
+#s-portada .fl .l{height:7%;margin:8% 10% 0;border-radius:3px;background:var(--sc)}
+#s-portada .fl .l.s{width:50%;background:var(--v)}
+#s-portada .fl .bl{position:absolute;bottom:12%;right:10%;width:34%;height:30%;border-radius:6px;background:var(--o)}
+.cv-in{position:absolute;left:84px;top:110px;width:640px}
+.cv-pre{font:700 14px/1 var(--hf);letter-spacing:.22em;color:var(--o);text-transform:uppercase;margin-bottom:22px;display:flex;gap:12px;align-items:center}
+.cv-pre:before{content:"";width:40px;height:2px;background:var(--o)}
+.cv-h{font:900 92px/.9 var(--hf);font-stretch:78%;letter-spacing:-.01em}
+.cv-h span{display:block;color:var(--sa)}
+.cv-num{position:absolute;right:70px;bottom:90px;font:900 260px/.8 var(--hf);font-stretch:70%;color:transparent;-webkit-text-stroke:2px rgba(255,255,255,.18);pointer-events:none}
+.cv-sub{margin-top:26px;font-size:18px;line-height:1.6;color:#d5e3cf;max-width:520px}
+.cv-sub b{color:#fff}
+.cv-go{margin-top:30px;display:flex;gap:14px}
+.cv-auth{margin-top:26px;display:flex;align-items:center;gap:14px;padding:12px 18px 12px 14px;border-left:4px solid var(--o);background:rgba(255,255,255,.07);border-radius:0 10px 10px 0;width:max-content}
+.cv-auth span{font:700 11px/1 Inter;letter-spacing:.18em;text-transform:uppercase;color:var(--o)}
+.cv-auth b{font:800 24px/1 var(--hf);font-stretch:90%;color:#fff}
+.cv-go .btn{background:var(--o);color:#1c1c00;font-size:16px;padding:14px 22px}
+.cv-go .btn:hover{background:#ffcb2f}
+.cv-go .btn.ghost{background:transparent;color:#fff;border-color:rgba(255,255,255,.4)}
+.cv-uni{position:absolute;left:84px;bottom:72px;font:600 12px/1.5 Inter;letter-spacing:.16em;text-transform:uppercase;color:#9fc1a2}
+
+/* ---------- S2 contenido ---------- */
+.agenda{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;height:100%}
+.ag{position:relative;border-radius:20px;padding:26px 24px;text-align:left;background:#fff;border:1px solid var(--line);overflow:hidden;transition:transform .35s cubic-bezier(.2,.8,.2,1),box-shadow .35s,color .3s;display:flex;flex-direction:column}
+.ag:before{content:"";position:absolute;inset:0;background:var(--v);transform:translateY(101%);transition:transform .45s cubic-bezier(.2,.8,.2,1);z-index:0}
+.ag:hover{transform:translateY(-8px);box-shadow:0 22px 40px rgba(7,111,62,.25);color:#fff}
+.ag:hover:before{transform:none}
+.ag>*{position:relative;z-index:1}
+.ag .n{font:900 96px/.85 var(--hf);font-stretch:75%;color:var(--sc);transition:color .3s}
+.ag:hover .n{color:var(--o)}
+.ag h4{font:800 25px/1.08 var(--hf);font-stretch:90%;margin-top:auto}
+.ag p{font-size:14px;line-height:1.5;margin-top:12px;color:var(--mut);transition:color .3s}
+.ag:hover p{color:#d6e6d3}
+.ag .go{margin-top:18px;font-weight:700;font-size:13px;display:flex;gap:6px;align-items:center;color:var(--v)}
+.ag:hover .go{color:var(--o)}
+.ag svg.ic{width:46px;height:46px;margin:18px 0 0;stroke:currentColor;fill:none;stroke-width:1.6;color:var(--v);transition:color .3s}
+.ag:hover svg.ic{color:#fff}
+
+/* ---------- S3 qué son ---------- */
+.what{display:grid;grid-template-columns:1.05fr 1fr;gap:48px;height:100%;align-items:center}
+.blob{width:330px;height:330px;margin:0 auto;border-radius:62% 38% 55% 45%/48% 60% 40% 52%;background:linear-gradient(145deg,#2f9a5c,var(--v));display:grid;place-items:center;color:#fff;font:900 46px var(--hf);font-stretch:80%;box-shadow:0 30px 60px rgba(7,111,62,.35);animation:morph 9s ease-in-out infinite;position:relative;cursor:pointer;user-select:none}
+.blob small{display:block;font:600 13px Inter;letter-spacing:.15em;text-transform:uppercase;color:var(--o);text-align:center;margin-top:6px}
+@keyframes morph{50%{border-radius:40% 60% 38% 62%/58% 40% 60% 42%}}
+.pts{display:flex;flex-direction:column;gap:14px}
+.pt{display:flex;gap:16px;align-items:flex-start;padding:18px 20px;border-radius:14px;background:#fff;border:1px solid var(--line);opacity:.25;transform:translateX(20px);transition:all .5s cubic-bezier(.2,.8,.2,1)}
+.pt.on{opacity:1;transform:none;border-color:var(--sa);box-shadow:0 10px 24px rgba(19,36,26,.08)}
+.pt .ix{flex:none;width:36px;height:36px;border-radius:10px;background:var(--sx);color:var(--v);display:grid;place-items:center;font:800 16px var(--hf)}
+.pt.on .ix{background:var(--v);color:#fff}
+.pt p{font-size:18px;line-height:1.45}
+
+/* ---------- S4 apps ---------- */
+.apps-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
+.apps{display:grid;grid-template-columns:1.6fr 1fr;gap:24px;height:calc(100% - 56px)}
+.agrid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;align-content:start}
+.app{border-radius:14px;background:#fff;border:1.5px solid var(--line);padding:14px 12px;display:flex;align-items:center;gap:10px;text-align:left;transition:all .3s cubic-bezier(.2,.8,.2,1)}
+.app .av{flex:none;width:38px;height:38px;border-radius:11px;display:grid;place-items:center;color:#fff;font:800 15px var(--hf)}
+.app b{font:700 14px/1.15 var(--hf)}
+.app:hover{transform:translateY(-3px);border-color:var(--sa)}
+.app.sel{border-color:var(--v);box-shadow:0 0 0 3px rgba(7,111,62,.15)}
+.app.dim{opacity:.18;transform:scale(.95);pointer-events:none}
+.ainfo{padding:26px;display:flex;flex-direction:column;gap:12px;position:relative;overflow:hidden}
+.ainfo .av{width:64px;height:64px;border-radius:18px;display:grid;place-items:center;color:#fff;font:900 26px var(--hf)}
+.ainfo h4{font:800 30px/1 var(--hf);font-stretch:88%}
+.ainfo .tags{display:flex;gap:6px;flex-wrap:wrap}
+.ainfo .tags span{font-size:11.5px;font-weight:700;padding:5px 10px;border-radius:999px;background:var(--sx);color:var(--v)}
+.ainfo p{font-size:16px;line-height:1.55;color:#2a3b2f}
+.ainfo .swap{animation:rise .45s both}
+
+/* ---------- S5 orbit ---------- */
+.orbitwrap{display:grid;grid-template-columns:1.1fr 1fr;gap:30px;height:100%;align-items:center}
+.orbit{position:relative;width:470px;height:470px;margin:0 auto}
+.orbit .ring{position:absolute;inset:40px;border-radius:50%;border:2px dashed var(--sa)}
+.orbit .rot{position:absolute;inset:0;animation:spin 40s linear infinite}
+.orbit:hover .rot,.orbit:hover .node{animation-play-state:paused}
+@keyframes spin{to{transform:rotate(360deg)}}
+.orbit .node{position:absolute;width:118px;height:118px;margin:-59px 0 0 -59px;border-radius:50%;background:#fff;border:3px solid var(--v);display:grid;place-items:center;text-align:center;font:700 13.5px/1.15 var(--hf);padding:10px;color:var(--vo);animation:spin 40s linear infinite reverse;transition:background .25s,color .25s,box-shadow .25s,border-color .25s}
+.orbit .node:hover{box-shadow:0 0 0 8px rgba(7,111,62,.15)}
+.orbit .node.on{background:var(--v);color:#fff;border-color:var(--o);box-shadow:0 0 0 8px rgba(242,183,5,.3)}
+.orbit .core{position:absolute;left:50%;top:50%;width:150px;height:150px;margin:-75px;border-radius:50%;background:radial-gradient(circle at 30% 30%,#2f9a5c,var(--vo));color:#fff;display:grid;place-items:center;text-align:center;font:800 19px/1.1 var(--hf);box-shadow:0 18px 40px rgba(7,111,62,.4)}
+.odesc{padding:34px;min-height:300px}
+.odesc .big{font:900 72px/.8 var(--hf);color:var(--sc);font-stretch:75%}
+.odesc h4{font:800 32px/1.05 var(--hf);font-stretch:88%;margin:10px 0 14px;color:var(--v)}
+.odesc p{font-size:18px;line-height:1.55}
+.odesc .dots{display:flex;gap:6px;margin-top:22px}
+.odesc .dots i{width:28px;height:6px;border-radius:3px;background:var(--sc);transition:background .3s}
+.odesc .dots i.on{background:var(--v)}
+
+/* ---------- S6 pasos ---------- */
+.steps{display:flex;gap:6px;margin-bottom:22px}
+.st{flex:1;text-align:left;padding:12px 12px 14px;border-radius:12px;background:#fff;border:1.5px solid var(--line);position:relative;transition:all .3s}
+.st .n{font:900 26px/1 var(--hf);color:var(--sa)}
+.st .l{font:700 12.5px/1.2 var(--hf);margin-top:6px;color:#334}
+.st:after{content:"";position:absolute;left:12px;right:12px;bottom:6px;height:3px;border-radius:2px;background:var(--sc)}
+.st.done:after{background:var(--sa)}
+.st.on{background:var(--v);border-color:var(--v);transform:translateY(-4px);box-shadow:0 12px 24px rgba(7,111,62,.3)}
+.st.on .n{color:var(--o)} .st.on .l{color:#fff} .st.on:after{background:var(--o)}
+.stpanel{display:grid;grid-template-columns:260px 1fr;gap:32px;padding:30px 36px;height:calc(100% - 110px);align-items:center}
+.stpanel .ico{width:220px;height:220px;border-radius:30px;background:var(--sx);display:grid;place-items:center;position:relative}
+.stpanel .ico svg{width:120px;height:120px;stroke:var(--v);fill:none;stroke-width:1.4}
+.stpanel .ico .bn{position:absolute;top:-14px;left:-14px;width:56px;height:56px;border-radius:50%;background:var(--o);display:grid;place-items:center;font:900 26px var(--hf);color:#222}
+.stpanel h4{font:800 36px/1 var(--hf);font-stretch:85%;color:var(--v);text-transform:uppercase}
+.stpanel .q{font:600 20px/1.4 var(--hf);margin:16px 0 10px;color:var(--ink)}
+.stpanel p{font-size:17.5px;line-height:1.6;color:#2a3b2f}
+.stpanel .nav{margin-top:20px;display:flex;gap:10px}
+.swap-in{animation:rise .45s both}
+
+/* ---------- S7 reto ---------- */
+.game{display:grid;grid-template-columns:1fr 1fr;gap:26px;height:100%}
+.pool,.slots{padding:22px;display:flex;flex-direction:column;gap:9px}
+.pool h5,.slots h5{font:800 14px var(--hf);letter-spacing:.14em;text-transform:uppercase;color:var(--mut);margin-bottom:4px}
+.tok{padding:12px 16px;border-radius:10px;background:var(--sx);border:1.5px solid var(--line);font-weight:600;font-size:15px;text-align:left;transition:all .25s}
+.tok:hover{background:#fff;border-color:var(--v);transform:translateX(4px)}
+.tok.used{opacity:.2;pointer-events:none}
+.slot{display:flex;align-items:center;gap:12px;padding:8px 10px;border-radius:10px;border:1.5px dashed var(--line);min-height:46px;font-weight:600;font-size:15px;transition:all .25s}
+.slot .k{flex:none;width:28px;height:28px;border-radius:8px;background:var(--sc);display:grid;place-items:center;font:800 13px var(--hf);color:var(--vo)}
+.slot.f{border-style:solid;background:#fff;border-color:var(--sa);cursor:pointer}
+.slot.ok{border-color:var(--v);background:#e9f6ee}.slot.ok .k{background:var(--v);color:#fff}
+.slot.bad{border-color:var(--r);background:#fdecea;animation:shake .4s}.slot.bad .k{background:var(--r);color:#fff}
+@keyframes shake{25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+.gbar{display:flex;gap:10px;align-items:center;margin-top:auto;padding-top:8px}
+.gmsg{font-weight:700;font-size:15px}
+
+/* ---------- S8 flip ---------- */
+.flipgrid{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;height:calc(100% - 40px)}
+.flip{perspective:900px;cursor:pointer}
+.flip .in{position:relative;width:100%;height:100%;transform-style:preserve-3d;transition:transform .7s cubic-bezier(.3,.8,.3,1)}
+.flip.on .in{transform:rotateY(180deg)}
+.flip .f,.flip .b{position:absolute;inset:0;backface-visibility:hidden;border-radius:16px;padding:16px;display:flex;flex-direction:column}
+.flip .f{background:#fff;border:1.5px solid var(--line);justify-content:space-between}
+.flip:hover .f{border-color:var(--v)}
+.flip .f .n{width:44px;height:44px;border-radius:50%;background:#3a9494;background:var(--v);color:#fff;display:grid;place-items:center;font:900 20px var(--hf)}
+.flip .f h5{font:800 17px/1.1 var(--hf);font-stretch:82%;text-transform:uppercase;color:var(--ink)}
+.flip .f svg{width:46px;height:46px;stroke:var(--ol);fill:none;stroke-width:1.5;align-self:flex-end}
+.flip .b{background:var(--v);color:#fff;transform:rotateY(180deg);justify-content:center;gap:10px}
+.flip .b .n{font:900 34px/1 var(--hf);color:var(--o)}
+.flip .b p{font-size:14px;line-height:1.45}
+.fliptop{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;height:28px}
+.meter{display:flex;align-items:center;gap:10px;font-weight:700;font-size:13px;color:var(--mut)}
+.meter .tr{width:180px;height:8px;border-radius:4px;background:var(--sc);overflow:hidden}
+.meter .tr i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--o),var(--v));transition:width .4s}
+
+/* ---------- S9 antes/después ---------- */
+.ba{display:grid;grid-template-columns:1fr 330px;gap:30px;height:100%}
+.cmp{position:relative;border-radius:14px;overflow:hidden;box-shadow:0 18px 40px rgba(0,0,0,.18);user-select:none;touch-action:none;cursor:ew-resize;aspect-ratio:16/9;align-self:center}
+.cmp .ms{position:absolute;inset:0}
+.bad-s{background:linear-gradient(135deg,#ff00cc,#3333ff 50%,#ffee00);font-family:'Merriweather',serif;padding:22px 26px;color:#200}
+.bad-s h6{font:700 30px 'Merriweather',serif;color:#ff0;text-shadow:2px 2px 0 #f00,4px 4px 0 #00f;text-decoration:underline;font-style:italic}
+.bad-s ul{margin:12px 0 0 22px;font-size:13.5px;line-height:1.35;color:#fff}
+.bad-s .wa{position:absolute;bottom:20px;right:22px;font:700 12px 'Merriweather',serif;color:#0f0;transform:rotate(-8deg);background:#f0f;padding:6px}
+.good-s{background:#fbfcf8;padding:40px 46px;display:grid;grid-template-columns:1fr 1fr;gap:30px;align-items:center}
+.good-s h6{font:800 40px/1.02 var(--hf);font-stretch:85%;color:var(--ink)}
+.good-s h6 em{font-style:normal;color:var(--v)}
+.good-s p{margin-top:12px;font-size:15px;color:var(--mut)}
+.good-s .bars{display:flex;align-items:flex-end;gap:14px;height:180px;padding-bottom:4px;border-bottom:2px solid var(--line)}
+.good-s .bars i{flex:1;border-radius:6px 6px 0 0;background:var(--sc)}
+.good-s .bars i.hot{background:var(--r)}
+.cmp .clip{position:absolute;inset:0;clip-path:inset(0 50% 0 0)}
+.cmp .hdl{position:absolute;top:0;bottom:0;left:50%;width:4px;margin-left:-2px;background:#fff;box-shadow:0 0 12px rgba(0,0,0,.4)}
+.cmp .hdl:after{content:"⟷";position:absolute;top:50%;left:50%;width:46px;height:46px;margin:-23px;border-radius:50%;background:var(--o);display:grid;place-items:center;font-size:20px;font-weight:900;color:#222;box-shadow:0 4px 12px rgba(0,0,0,.3)}
+.cmp .lab{position:absolute;top:12px;padding:6px 10px;border-radius:6px;font:800 11px Inter;letter-spacing:.12em;text-transform:uppercase}
+.cmp .lab.l{left:12px;background:var(--r);color:#fff}.cmp .lab.r{right:12px;background:var(--v);color:#fff}
+.fixes{padding:22px;display:flex;flex-direction:column;gap:10px}
+.fixes h5{font:800 18px var(--hf);margin-bottom:4px}
+.fx{display:flex;gap:10px;align-items:flex-start;font-size:14px;line-height:1.4}
+.fx i{flex:none;font-style:normal;width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font-size:12px;font-weight:800;background:#fdecea;color:var(--r);transition:all .3s}
+.fx.ok i{background:var(--v);color:#fff}
+
+/* ---------- mini slide frame ---------- */
+.mframe{background:#2b2f2c;border-radius:12px;padding:18px;display:grid;place-items:center;position:relative}
+.mslide{background:#fff;position:relative;overflow:hidden;box-shadow:0 10px 26px rgba(0,0,0,.35);transition:all .55s cubic-bezier(.2,.8,.2,1)}
+
+/* ---------- S10 tamaño ---------- */
+.size{display:grid;grid-template-columns:1fr 1.25fr;gap:30px;height:100%}
+.size .ctl{display:flex;flex-direction:column;gap:16px}
+.size h5{font:800 13px var(--hf);letter-spacing:.14em;text-transform:uppercase;color:var(--mut)}
+.size .row{display:flex;gap:8px;flex-wrap:wrap}
+.size .mframe{height:100%}
+.sz-cont{position:absolute;left:50%;top:50%;width:440px;height:248px;margin:-124px 0 0 -220px;transition:transform .6s cubic-bezier(.2,.8,.2,1)}
+.sz-cont .tb{position:absolute;left:24px;top:22px;right:24px;height:40px;background:var(--v);border-radius:6px;color:#fff;font:800 20px/40px var(--hf);padding-left:14px}
+.sz-cont .im{position:absolute;right:24px;bottom:24px;width:170px;height:140px;border-radius:8px;background:linear-gradient(160deg,var(--sa),var(--v));}
+.sz-cont .tx{position:absolute;left:24px;bottom:28px;width:200px}
+.sz-cont .tx i{display:block;height:10px;border-radius:4px;background:var(--sc);margin-top:10px}
+.ovf{position:absolute;inset:0;pointer-events:none;outline:3px dashed var(--r);outline-offset:-3px;opacity:0;transition:opacity .4s}
+.dlg{position:absolute;inset:0;background:rgba(0,0,0,.45);display:none;place-items:center;z-index:5;border-radius:12px}
+.dlg.open{display:grid;animation:fadein .2s}
+.dlg .box{background:#fff;border-radius:10px;padding:18px 20px;width:420px;box-shadow:0 20px 50px rgba(0,0,0,.4);font-size:13.5px;animation:rise .3s both}
+.dlg .box h6{font:700 14px Inter;margin-bottom:8px}
+.dlg .opts{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+.dlg .opt{border:1.5px solid var(--line);border-radius:8px;padding:10px;text-align:center;font-weight:600;font-size:13px;transition:all .2s}
+.dlg .opt:hover{border-color:var(--v);background:var(--sx)}
+.dlg .opt svg{width:80px;height:50px;display:block;margin:0 auto 6px}
+.sizeinfo{font-size:15px;line-height:1.55;color:#2a3b2f;padding:16px 18px;border-left:4px solid var(--o);background:#fff;border-radius:0 10px 10px 0;min-height:96px}
+
+/* ---------- S11 tema ---------- */
+.theme{display:grid;grid-template-columns:330px 1fr;gap:28px;height:100%}
+.theme .tl{display:grid;grid-template-columns:1fr 1fr;gap:10px;align-content:start}
+.th{border-radius:10px;overflow:hidden;border:2px solid transparent;background:#fff;box-shadow:0 2px 8px rgba(0,0,0,.08);transition:all .2s;text-align:left}
+.th:hover{transform:translateY(-2px)}
+.th.on{border-color:var(--o);box-shadow:0 0 0 3px rgba(242,183,5,.35)}
+.th .pv{height:62px;position:relative;display:flex;align-items:center;padding-left:10px;font-size:20px;font-weight:700}
+.th .nm{font-size:12px;font-weight:700;padding:6px 10px;color:#334}
+.vars{display:flex;gap:8px;margin-top:6px}
+.vars button{width:34px;height:34px;border-radius:8px;border:2px solid #fff;box-shadow:0 0 0 1px var(--line);transition:transform .2s}
+.vars button.on{box-shadow:0 0 0 3px var(--ink);transform:scale(1.08)}
+.tm{width:100%;aspect-ratio:16/9;transition:background .5s,color .5s}
+.tm .t1{position:absolute;left:8%;top:20%;font-size:44px;font-weight:800;line-height:1;transition:all .5s}
+.tm .t2{position:absolute;left:8%;top:44%;font-size:18px;opacity:.8;transition:all .5s}
+.tm .acc{position:absolute;transition:all .5s}
+.tm .b1{left:8%;top:56%;width:120px;height:6px;border-radius:3px}
+.tm .shape{right:7%;bottom:12%;width:30%;height:52%;border-radius:14px;opacity:.9}
+
+/* ---------- S12 en línea ---------- */
+.online{display:grid;grid-template-columns:300px 1fr;gap:28px;height:100%}
+.olsteps{display:flex;flex-direction:column;gap:10px}
+.ols{display:flex;gap:12px;align-items:center;padding:12px 14px;border-radius:12px;background:#fff;border:1.5px solid var(--line);font-weight:600;font-size:14.5px;transition:all .3s}
+.ols i{flex:none;font-style:normal;width:30px;height:30px;border-radius:50%;background:var(--sc);display:grid;place-items:center;font:800 14px var(--hf);color:var(--vo);transition:all .3s}
+.ols.on{border-color:var(--v);box-shadow:0 8px 18px rgba(7,111,62,.15)}.ols.on i{background:var(--o);color:#222}
+.ols.done i{background:var(--v);color:#fff}
+.win{border-radius:12px;overflow:hidden;background:#fff;box-shadow:0 18px 40px rgba(0,0,0,.18);display:flex;flex-direction:column;border:1px solid #c9cfc7;position:relative}
+.win .tbar{height:30px;background:#b7472a;background:#2f3a33;color:#dfe;display:flex;align-items:center;padding:0 12px;font-size:12px;gap:8px}
+.win .tbar i{width:10px;height:10px;border-radius:50%;background:#ff6159;display:inline-block}
+.win .tbar i+i{background:#ffbd2e}.win .tbar i+i+i{background:#28c840}
+.ribtabs{display:flex;gap:2px;background:#f3f4f1;padding:6px 8px 0;font-size:12px;border-bottom:1px solid #dde1da}
+.ribtabs span{padding:6px 10px;border-radius:6px 6px 0 0;color:#444}
+.ribtabs span.on{background:#fff;color:var(--v);font-weight:700;box-shadow:inset 0 -2px 0 var(--v)}
+.ribbon{display:flex;gap:6px;padding:8px 10px;background:#fff;border-bottom:1px solid #e3e6e0;min-height:72px;align-items:stretch}
+.rb{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:6px 10px;border-radius:6px;font-size:11px;color:#333;min-width:72px;text-align:center;line-height:1.15;position:relative}
+.rb svg{width:24px;height:24px;stroke:#3b4a40;fill:none;stroke-width:1.5}
+.rb.hl{background:#e9f6ee;outline:2px solid var(--v);animation:pulse 1.4s infinite}
+@keyframes pulse{50%{box-shadow:0 0 0 8px rgba(7,111,62,.15)}}
+.rb.dim{opacity:.55}
+.wbody{flex:1;background:#e8ebe6;display:grid;place-items:center;position:relative;padding:20px}
+.olbox{background:#fff;border-radius:10px;padding:20px 22px;width:460px;box-shadow:0 14px 34px rgba(0,0,0,.25);font-size:13.5px;line-height:1.5;animation:rise .35s both}
+.olbox h6{font:700 16px Inter;margin-bottom:8px}
+.olbox .lnk{display:flex;gap:8px;margin:12px 0;align-items:center}
+.olbox input{flex:1;border:1.5px solid var(--line);border-radius:6px;padding:8px 10px;font:500 12.5px ui-monospace,monospace;color:#234}
+.olbox label{display:flex;gap:8px;align-items:center;margin:10px 0}
+.spin{width:38px;height:38px;border-radius:50%;border:4px solid var(--sc);border-top-color:var(--v);animation:spin .8s linear infinite;margin:10px auto}
+.live{position:absolute;top:10px;left:50%;transform:translateX(-50%);background:var(--r);color:#fff;font:700 12px Inter;padding:6px 12px;border-radius:999px;display:flex;gap:8px;align-items:center}
+.live:before{content:"";width:8px;height:8px;border-radius:50%;background:#fff;animation:blink2 1s infinite}
+@keyframes blink2{50%{opacity:.2}}
+
+/* ---------- S13 patrón ---------- */
+.master{display:grid;grid-template-columns:200px 1fr 250px;gap:20px;height:100%}
+.mthumbs{display:flex;flex-direction:column;gap:8px;overflow:hidden}
+.mth{position:relative;border-radius:6px;border:2px solid transparent;background:#fff;box-shadow:0 2px 6px rgba(0,0,0,.1);aspect-ratio:16/9;width:100%;transition:all .2s;overflow:hidden}
+.mth.big{width:100%}
+.mth.lay{width:82%;margin-left:18%}
+.mth.on{border-color:var(--o)}
+.mth .k{position:absolute;left:-2px;top:-2px;background:var(--ink);color:#fff;font:700 9px Inter;padding:2px 5px;border-radius:0 0 4px 0}
+.mstage{display:flex;flex-direction:column;gap:10px}
+.mstage .mframe{flex:1}
+.ms-s{width:100%;aspect-ratio:16/9}
+/* layout renderer (scales via font-size) */
+.L{position:absolute;inset:0;font-family:var(--mf,Archivo);background:#fff}
+.L .ti{position:absolute;color:var(--mc,#076F3E);font-weight:800;line-height:1.05}
+.L .bx{position:absolute;border:1px dashed #b9c2b5;border-radius:3px;color:#8a958a}
+.L .strip{position:absolute;left:0;right:0;bottom:0;height:7%;background:var(--mc,#076F3E);display:var(--ms,block)}
+.L .strip:before{content:"";position:absolute;left:0;right:0;top:-18%;height:18%;background:var(--o)}
+.L .lg{position:absolute;right:3%;top:4%;font-weight:900;color:var(--mc,#076F3E);display:var(--ml,block);letter-spacing:.04em}
+.mctl{padding:18px;display:flex;flex-direction:column;gap:14px}
+.mctl h5{font:800 12px var(--hf);letter-spacing:.14em;text-transform:uppercase;color:var(--mut)}
+.sw{display:flex;gap:6px}
+.sw button{width:30px;height:30px;border-radius:50%;border:3px solid #fff;box-shadow:0 0 0 1px var(--line);transition:transform .2s}
+.sw button.on{box-shadow:0 0 0 2px var(--ink);transform:scale(1.1)}
+.tg{display:flex;align-items:center;justify-content:space-between;font-size:14px;font-weight:600}
+.tg button{width:44px;height:24px;border-radius:12px;background:var(--line);position:relative;transition:background .2s}
+.tg button:after{content:"";position:absolute;left:3px;top:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:transform .2s;box-shadow:0 1px 3px rgba(0,0,0,.3)}
+.tg button.on{background:var(--v)}.tg button.on:after{transform:translateX(20px)}
+.mnote{font-size:13px;line-height:1.5;color:#2a3b2f;background:var(--sx);border-radius:10px;padding:12px}
+
+/* ---------- S14 marcadores ---------- */
+.ph{display:grid;grid-template-columns:400px 1fr;gap:30px;height:100%}
+.ph .mframe{height:100%}
+.phs{width:100%;aspect-ratio:16/9}
+.phs .pt1{position:absolute;left:5%;right:5%;top:6%;height:20%;border:1.5px dashed #9aa79a;border-radius:4px;display:flex;align-items:center;padding:0 14px;font:700 26px var(--hf);color:#7d887d;outline:none;transition:border-color .2s}
+.phs .pt1:focus{border-color:var(--v);color:var(--ink)}
+.phs .pt1.filled{color:var(--ink);border-color:transparent}
+.phs .pb{position:absolute;left:5%;right:5%;top:31%;bottom:7%;border:1.5px dashed #9aa79a;border-radius:4px;display:grid;place-items:center}
+.phs .pb .ph-hint{position:absolute;left:14px;top:12px;font-size:14px;color:#7d887d}
+.icons6{display:grid;grid-template-columns:repeat(3,52px);gap:8px}
+.icons6 button{width:52px;height:52px;border-radius:10px;background:#f4f6f2;display:grid;place-items:center;transition:all .2s;position:relative}
+.icons6 button:hover{background:var(--v)}
+.icons6 button:hover svg{stroke:#fff}
+.icons6 svg{width:26px;height:26px;stroke:var(--v);fill:none;stroke-width:1.6}
+.icons6 button[data-tip]:hover:after{content:attr(data-tip);position:absolute;bottom:-26px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;font-size:11px;padding:3px 7px;border-radius:4px;white-space:nowrap;z-index:3}
+.obj{position:absolute;inset:6%;display:grid;place-items:center;animation:pop .45s cubic-bezier(.2,1.4,.4,1) both}
+@keyframes pop{from{transform:scale(.6);opacity:0}}
+.phlist{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:16px}
+.phlist span{font-size:13.5px;font-weight:600;padding:9px 12px;border-radius:9px;background:#fff;border:1px solid var(--line);display:flex;align-items:center;gap:8px;transition:all .3s}
+.phlist span.on{background:var(--v);color:#fff;border-color:var(--v)}
+.phlist span:before{content:"";width:8px;height:8px;border-radius:50%;background:var(--sa)}
+.phlist span.on:before{background:var(--o)}
+
+/* ---------- S15 notas ---------- */
+.notes{display:grid;grid-template-columns:1fr 290px;gap:26px;height:100%}
+.pp{display:flex;flex-direction:column;border-radius:12px;overflow:hidden;background:#e8ebe6;border:1px solid #c9cfc7;box-shadow:0 18px 40px rgba(0,0,0,.15);position:relative}
+.pp .main{flex:1;display:grid;grid-template-columns:110px 1fr;min-height:0}
+.pp .side{background:#f3f4f1;padding:10px;display:flex;flex-direction:column;gap:8px;border-right:1px solid #dde1da}
+.pp .side i{display:block;aspect-ratio:16/9;background:#fff;border:1px solid #ccd;border-radius:3px}
+.pp .side i.on{outline:2px solid var(--v)}
+.pp .canvas{display:grid;place-items:center;padding:14px}
+.pp .canvas .s{width:86%;aspect-ratio:16/9;background:#fff;box-shadow:0 4px 12px rgba(0,0,0,.15);position:relative;transition:width .4s}
+.pp .np{height:0;overflow:hidden;background:#fff;border-top:1px solid #d6dbd3;transition:height .45s cubic-bezier(.2,.8,.2,1)}
+.pp.shown .np{height:110px}
+.pp .np textarea{width:100%;height:100%;border:0;resize:none;padding:10px 14px;font:14px/1.5 Inter;color:#223;outline:none}
+.pp .sbar{height:30px;background:#2f3a33;color:#cfe0cf;display:flex;align-items:center;justify-content:flex-end;gap:6px;padding:0 10px;font-size:12px}
+.pp .sbar button{padding:4px 10px;border-radius:5px;color:#e6f2e6;display:flex;gap:6px;align-items:center}
+.pp .sbar button:hover{background:rgba(255,255,255,.12)}
+.pp .sbar button.on{background:var(--o);color:#222;font-weight:700}
+.pp .sbar button.pulse{animation:pulse2 1.4s infinite}
+@keyframes pulse2{50%{box-shadow:0 0 0 6px rgba(242,183,5,.35)}}
+.pres{position:absolute;inset:0;background:#111a14;color:#dfe9dc;display:none;grid-template-columns:1.4fr 1fr;grid-template-rows:auto 1fr;gap:14px;padding:16px;z-index:4}
+.pres.open{display:grid;animation:fadein .3s}
+.pres .top{grid-column:1/-1;display:flex;justify-content:space-between;align-items:center;font-size:13px}
+.pres .tmr{font:800 26px var(--hf);color:var(--o);font-variant-numeric:tabular-nums}
+.pres .cur{background:#fff;border-radius:6px;aspect-ratio:16/9;position:relative;align-self:start}
+.pres .rt{display:flex;flex-direction:column;gap:10px;min-height:0}
+.pres .nx{background:#fff;border-radius:6px;aspect-ratio:16/9;width:70%;position:relative;opacity:.85}
+.pres .nt{flex:1;font-size:15px;line-height:1.5;background:#1b281f;border-radius:8px;padding:10px 12px;overflow:auto;white-space:pre-wrap}
+.pres small{font-size:11px;color:#8fa58c;letter-spacing:.1em;text-transform:uppercase}
+.mini{position:absolute;inset:0;padding:8% 9%}
+.mini .h{font:800 1.3em/1 var(--hf);color:var(--v)}
+.mini .ln{height:.45em;border-radius:.2em;background:var(--sc);margin-top:.6em}
+.ntip{padding:20px;display:flex;flex-direction:column;gap:12px;font-size:15px;line-height:1.5}
+.ntip h5{font:800 20px var(--hf);color:var(--v)}
+
+/* ---------- S16 hipervínculos ---------- */
+.hl{display:grid;grid-template-columns:1fr 290px;gap:26px;height:100%}
+.hlwrap{position:relative;border-radius:12px;overflow:hidden;background:#2b2f2c;padding:18px;display:flex;flex-direction:column;gap:12px}
+.hltool{display:flex;gap:8px;align-items:center}
+.hltool .btn{padding:8px 14px;font-size:13px}
+.hltool kbd{font:700 11px Inter;background:#444;color:#fff;padding:2px 6px;border-radius:4px;margin-left:4px}
+.hls{flex:1;background:#fff;border-radius:4px;position:relative;box-shadow:0 8px 20px rgba(0,0,0,.35)}
+.hls .ttl{position:absolute;left:6%;top:9%;font:800 30px var(--hf);color:var(--ink)}
+.so{position:absolute;cursor:pointer;transition:outline .15s;outline:2px solid transparent;outline-offset:4px;border-radius:4px}
+.so:hover{outline:2px dashed var(--sa)}
+.so.sel{outline:2px solid #3b82f6}
+.so.sel:before{content:"";position:absolute;inset:-9px;border:1px solid #3b82f6;pointer-events:none;border-radius:2px;background:radial-gradient(circle,#fff 0 2px,#3b82f6 2.5px 4px,transparent 4.5px) -5px -5px/calc(100% + 1px) calc(100% + 1px) no-repeat}
+.so.txt{left:6%;top:32%;font-size:22px;font-weight:600;color:#223}
+.so.shp{left:6%;top:56%;width:190px;height:64px;border-radius:32px;background:var(--v);color:#fff;display:grid;place-items:center;font:800 18px var(--hf)}
+.so.img{right:7%;top:28%;width:230px;height:165px;border-radius:10px;overflow:hidden}
+.so.linked.txt{color:#1d5fd1;text-decoration:underline}
+.so.linked:after{content:"🔗";position:absolute;top:-12px;right:-12px;width:26px;height:26px;border-radius:50%;background:var(--o);display:grid;place-items:center;font-size:13px;box-shadow:0 2px 6px rgba(0,0,0,.3);animation:pop .4s both}
+.tip{position:absolute;background:#fffbe6;border:1px solid #d8c97a;font-size:11.5px;padding:5px 8px;border-radius:4px;box-shadow:0 4px 10px rgba(0,0,0,.2);white-space:nowrap;pointer-events:none;z-index:4;display:none}
+.hdlg{position:absolute;inset:0;background:rgba(0,0,0,.45);display:none;place-items:center;z-index:6}
+.hdlg.open{display:grid;animation:fadein .2s}
+.hdlg .box{width:640px;background:#fff;border-radius:10px;box-shadow:0 24px 60px rgba(0,0,0,.45);overflow:hidden;animation:rise .3s both;font-size:13px}
+.hdlg .bh{padding:10px 14px;background:#f3f4f1;font-weight:700;display:flex;justify-content:space-between;border-bottom:1px solid #dde1da}
+.hdlg .bb{display:grid;grid-template-columns:130px 1fr;min-height:250px}
+.hdlg .lt{background:#f7f8f6;border-right:1px solid #e3e6e0;padding:8px;display:flex;flex-direction:column;gap:6px}
+.hdlg .lt button{padding:10px 6px;border-radius:6px;font-size:11.5px;line-height:1.2;display:flex;flex-direction:column;align-items:center;gap:5px;text-align:center;color:#334}
+.hdlg .lt button svg{width:24px;height:24px;stroke:var(--v);fill:none;stroke-width:1.5}
+.hdlg .lt button.on{background:#e3f1e8;outline:1.5px solid var(--v);font-weight:700}
+.hdlg .rt{padding:14px 16px;display:flex;flex-direction:column;gap:10px}
+.hdlg label{font-weight:600;font-size:12px;color:#445}
+.hdlg input{width:100%;border:1.5px solid var(--line);border-radius:6px;padding:8px 10px;font:13px Inter;outline:none}
+.hdlg input:focus{border-color:var(--v)}
+.flist{border:1px solid var(--line);border-radius:6px;max-height:120px;overflow:auto}
+.flist button{display:flex;gap:8px;width:100%;text-align:left;padding:7px 10px;font-size:12.5px;align-items:center}
+.flist button:hover{background:var(--sx)}
+.flist button.on{background:var(--v);color:#fff}
+.hdlg .bf{display:flex;justify-content:flex-end;gap:8px;padding:10px 14px;border-top:1px solid #e3e6e0;background:#fafbf9}
+.hdlg .bf .btn{padding:8px 16px;font-size:13px}
+.hlside{padding:20px;display:flex;flex-direction:column;gap:12px}
+.hlside h5{font:800 20px/1.1 var(--hf);color:var(--v)}
+.hstep{display:flex;gap:10px;font-size:14px;line-height:1.4;align-items:flex-start;opacity:.45;transition:opacity .3s}
+.hstep.on{opacity:1}
+.hstep i{flex:none;font-style:normal;width:24px;height:24px;border-radius:50%;background:var(--sc);display:grid;place-items:center;font:800 12px var(--hf);color:var(--vo)}
+.hstep.on i{background:var(--o);color:#222}.hstep.done i{background:var(--v);color:#fff}
+.hlog{margin-top:auto;font-size:12.5px;background:var(--sx);border-radius:8px;padding:10px;min-height:60px;line-height:1.45}
+
+/* ---------- S17 animaciones ---------- */
+.anim{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:auto 1fr;gap:16px;height:100%}
+.atypes{grid-column:1/-1;display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.at{border-radius:14px;padding:14px 16px;background:#fff;border:2px solid var(--line);text-align:left;transition:all .25s}
+.at:hover{transform:translateY(-3px)}
+.at .star{font-size:26px;line-height:1}
+.at h5{font:800 17px/1.1 var(--hf);margin:6px 0 4px}
+.at p{font-size:12.5px;line-height:1.4;color:var(--mut)}
+.at.on{border-color:var(--c);box-shadow:0 10px 22px rgba(0,0,0,.08);background:color-mix(in srgb,var(--c) 8%,#fff)}
+.astage{position:relative;border-radius:14px;background:repeating-linear-gradient(0deg,#fff 0 29px,#eef2ea 29px 30px),repeating-linear-gradient(90deg,transparent 0 29px,#eef2ea 29px 30px);background-blend-mode:multiply;border:1px solid var(--line);overflow:hidden}
+.aobj{position:absolute;left:50%;top:50%;width:130px;height:130px;margin:-65px;border-radius:24px;background:linear-gradient(145deg,#2f9a5c,var(--v));color:#fff;display:grid;place-items:center;font:900 24px var(--hf);box-shadow:0 14px 30px rgba(7,111,62,.35)}
+.apath{position:absolute;inset:0;pointer-events:none}
+.aside{display:flex;flex-direction:column;gap:12px}
+.efx{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.efx button{padding:16px 12px;border-radius:12px;background:#fff;border:1.5px solid var(--line);font-weight:700;font-size:14px;display:flex;align-items:center;gap:10px;transition:all .2s}
+.efx button:hover{border-color:var(--c);background:color-mix(in srgb,var(--c) 10%,#fff)}
+.efx button:before{content:"▶";font-size:11px;width:24px;height:24px;border-radius:50%;background:var(--c);color:#fff;display:grid;place-items:center;flex:none}
+.adesc{font-size:15px;line-height:1.55;padding:14px 16px;border-radius:12px;background:#fff;border-left:5px solid var(--c)}
+
+/* ---------- S18 transiciones ---------- */
+.tr{display:grid;grid-template-columns:330px 1fr;gap:26px;height:100%}
+.tcat{display:flex;flex-direction:column;gap:12px}
+.tc{border-radius:14px;background:#fff;border:1.5px solid var(--line);padding:14px 16px}
+.tc h5{font:800 17px var(--hf);color:var(--v);margin-bottom:4px}
+.tc p{font-size:12.5px;color:var(--mut);margin-bottom:10px;line-height:1.4}
+.tc .row{display:flex;gap:6px;flex-wrap:wrap}
+.tstage{border-radius:14px;background:#2b2f2c;padding:24px;display:flex;flex-direction:column;gap:14px}
+.tview{flex:1;position:relative;perspective:1400px;}
+.tview .sl{position:absolute;inset:0;border-radius:6px;overflow:hidden;backface-visibility:hidden;box-shadow:0 10px 30px rgba(0,0,0,.4)}
+.tview .A{background:#fff}
+.tview .B{background:var(--v);color:#fff}
+.tview .sl .c{position:absolute;inset:0;padding:8% 9%}
+.tview .sl h6{font:900 46px/1 var(--hf);font-stretch:82%}
+.tview .A h6{color:var(--v)}
+.tview .sl p{font-size:18px;margin-top:14px;opacity:.85}
+.tview .sl .num{position:absolute;right:6%;bottom:4%;font:900 140px/1 var(--hf);opacity:.12}
+.tbar2{display:flex;justify-content:space-between;align-items:center;color:#cfe0cf;font-size:13px}
+.tbar2 b{color:var(--o)}
+
+/* ---------- S19 quiz ---------- */
+.quiz{display:grid;grid-template-columns:1fr 300px;gap:28px;height:100%}
+.qcard{padding:24px 32px;display:flex;flex-direction:column}
+.qn{font:800 13px var(--hf);letter-spacing:.16em;color:var(--mut);text-transform:uppercase}
+.qq{font:800 27px/1.15 var(--hf);font-stretch:90%;margin:10px 0 16px}
+.qopts{display:grid;gap:10px}
+.qo{text-align:left;padding:10px 16px;border-radius:12px;border:2px solid var(--line);background:#fff;font-size:16px;font-weight:600;display:flex;gap:14px;align-items:center;transition:all .2s}
+.qo b{flex:none;width:30px;height:30px;border-radius:8px;background:var(--sx);display:grid;place-items:center;font:800 14px var(--hf);color:var(--v)}
+.qo:hover{border-color:var(--sa);transform:translateX(4px)}
+.qo.ok{border-color:var(--v);background:#e9f6ee}.qo.ok b{background:var(--v);color:#fff}
+.qo.no{border-color:var(--r);background:#fdecea;animation:shake .4s}.qo.no b{background:var(--r);color:#fff}
+.qo[disabled]{pointer-events:none}
+.qfb{margin-top:12px;font-size:14.5px;line-height:1.45;min-height:42px}
+.qnav{margin-top:auto;display:flex;justify-content:space-between;align-items:center}
+.score{padding:26px;display:flex;flex-direction:column;align-items:center;gap:14px;text-align:center}
+.ring{width:170px;height:170px;position:relative}
+.ring svg{width:100%;height:100%;transform:rotate(-90deg)}
+.ring .v{position:absolute;inset:0;display:grid;place-items:center;font:900 46px var(--hf);color:var(--v)}
+.qdots{display:flex;gap:6px;flex-wrap:wrap;justify-content:center}
+.qdots i{width:14px;height:14px;border-radius:50%;background:var(--sc)}
+.qdots i.ok{background:var(--v)}.qdots i.no{background:var(--r)}.qdots i.cur{box-shadow:0 0 0 3px var(--o)}
+
+/* ---------- S20 recursos ---------- */
+.res{display:grid;grid-template-columns:1fr 1fr;gap:26px;height:100%}
+.vid{position:relative;border-radius:18px;overflow:hidden;background:linear-gradient(140deg,#d24726,#b7472a 45%,#7a2a17);color:#fff;padding:30px;display:flex;flex-direction:column;justify-content:flex-end;text-decoration:none;transition:transform .3s,box-shadow .3s}
+.vid:hover{transform:translateY(-6px) rotate(-.4deg);box-shadow:0 26px 50px rgba(0,0,0,.3)}
+.vid .play{position:absolute;top:50%;left:50%;width:96px;height:96px;margin:-70px 0 0 -48px;border-radius:50%;background:rgba(255,255,255,.95);display:grid;place-items:center;transition:transform .3s}
+.vid:hover .play{transform:scale(1.12)}
+.vid .play:after{content:"";border-left:30px solid #b7472a;border-top:18px solid transparent;border-bottom:18px solid transparent;margin-left:8px}
+.vid h5{font:900 34px/1 var(--hf);font-stretch:85%}
+.vid span{font-size:13px;opacity:.85;margin-top:8px}
+.refs{display:flex;flex-direction:column;gap:14px}
+.ref{padding:20px 22px;display:flex;gap:16px;text-decoration:none;color:inherit;transition:transform .25s,border-color .25s}
+.ref:hover{transform:translateX(6px);border-color:var(--v)}
+.ref .ic{flex:none;width:48px;height:48px;border-radius:12px;background:var(--sx);display:grid;place-items:center;font:900 18px var(--hf);color:var(--v)}
+.ref h6{font:700 16px/1.3 var(--hf)}
+.ref p{font-size:13px;color:var(--mut);margin-top:4px;line-height:1.45}
+.ref .u{font:12px ui-monospace,monospace;color:var(--v);margin-top:6px;word-break:break-all}
+
+/* ---------- S21 gracias ---------- */
+#s-gracias{background:radial-gradient(900px 600px at 30% 80%,#0f6a3c 0%,var(--vd) 65%);color:#fff;text-align:center}
+#s-gracias .in{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;padding-bottom:40px}
+#s-gracias h2{font:900 150px/.85 var(--hf);font-stretch:75%;cursor:pointer;user-select:none;color:#fff;display:flex}
+#s-gracias h2 span{display:inline-block;animation:wave 2.4s ease-in-out infinite;animation-delay:calc(var(--k)*.1s)}
+#s-gracias h2 span:nth-child(odd){color:var(--sa)}#s-gracias h2 span:nth-child(4){color:var(--o)}
+#s-gracias h2:hover span{animation-duration:.8s}
+@keyframes wave{0%,60%,100%{transform:none}30%{transform:translateY(-18px)}}
+#s-gracias .qt{font:600 24px/1.45 var(--hf);max-width:760px;color:#d5e3cf}
+#s-gracias .qt b{color:var(--o)}
+#confetti{position:absolute;inset:0;pointer-events:none;z-index:30}
+</style>
+</head>
+<body>
+<div id="progress"></div>
+<div id="viewport">
+<div id="stage">
+
+<!-- 1 PORTADA -->
+<section class="slide dark" id="s-portada" data-title="Portada" data-sec="0">
+  <div id="floaters"></div>
+  <div class="cv-num">1.4</div>
+  <div class="cv-in">
+    <div class="cv-pre a">Ofimática · Unidad 1</div>
+    <h1 class="cv-h a">Gestor de<span>Presentaciones</span></h1>
+    <p class="cv-sub a">Procesador de texto y gestor de presentaciones: <b>planificar, diseñar, insertar objetos, animar</b> y presentar con impacto.</p>
+    <div class="cv-auth a"><span>Docente</span><b>Cristian Zuñiga, Mgs.</b></div>
+    <div class="cv-go a">
+      <button class="btn" data-next>Comenzar →</button>
+      <button class="btn ghost" data-overview>Ver todas las diapositivas</button>
+    </div>
+  </div>
+  <div class="cv-uni a">Universidad de las Fuerzas Armadas ESPE · Unidad de Admisión · Curso de Nivelación SI-2026</div>
+</section>
+
+<!-- 2 CONTENIDO -->
+<section class="slide" id="s-contenido" data-title="Contenido" data-sec="0">
+  <div class="topstrip"></div>
+  <div class="hd"><div><div class="kick a">1.4 · Gestor de presentaciones</div><h2 class="t a">Contenido</h2></div><div class="hint a">Haz clic en un tema para saltar a él</div></div>
+  <div class="bd"><div class="agenda">
+    <button class="ag a" data-goto="s-que"><span class="n">01</span><svg class="ic" viewBox="0 0 48 48"><rect x="6" y="8" width="36" height="24" rx="3"/><path d="M14 40h20M24 32v8M12 16h14M12 22h20"/></svg><h4>Proceso de planificación y creación de presentaciones</h4><p>Qué son, para qué sirven, pasos para planificar y herramientas de PowerPoint.</p><span class="go">Ir al tema →</span></button>
+    <button class="ag a" data-goto="s-marc"><span class="n">02</span><svg class="ic" viewBox="0 0 48 48"><rect x="6" y="8" width="36" height="28" rx="3" stroke-dasharray="4 3"/><path d="M12 15h24M14 22h8v8h-8zM28 22h8M28 27h6"/></svg><h4>Diseño de diapositivas</h4><p>Marcadores de posición, objetos y notas del orador.</p><span class="go">Ir al tema →</span></button>
+    <button class="ag a" data-goto="s-hiper"><span class="n">03</span><svg class="ic" viewBox="0 0 48 48"><path d="M20 28a7 7 0 0 0 10 0l6-6a7 7 0 0 0-10-10l-3 3"/><path d="M28 20a7 7 0 0 0-10 0l-6 6a7 7 0 0 0 10 10l3-3"/></svg><h4>Inserción de objetos</h4><p>Hipervínculos a webs, archivos, diapositivas y correo.</p><span class="go">Ir al tema →</span></button>
+    <button class="ag a" data-goto="s-anim"><span class="n">04</span><svg class="ic" viewBox="0 0 48 48"><path d="M24 6l5 11 12 1-9 8 3 12-11-7-11 7 3-12-9-8 12-1z"/></svg><h4>Animación y transición</h4><p>Efectos de entrada, énfasis, salida, trayectorias y transiciones.</p><span class="go">Ir al tema →</span></button>
+  </div></div>
+</section>
+
+<!-- 3 QUÉ SON -->
+<section class="slide" id="s-que" data-title="¿Qué son los gestores?" data-sec="1">
+  <div class="topstrip"></div>
+  <div class="hd"><div><div class="kick a"><i>1</i>Planificación y creación</div><h2 class="t a">Gestores de <em>presentaciones</em></h2></div></div>
+  <div class="bd"><div class="what">
+    <div>
+      <p class="lead a">Los gestores de presentaciones son <b>aplicaciones pensadas para diseñar y utilizar apoyos visuales</b> de forma profesional.</p>
+      <div class="a" style="margin-top:34px"><div class="blob" id="blob">Utilidad<small>toca para descubrir</small></div></div>
+    </div>
+    <div class="pts" id="pts">
+      <div class="pt"><span class="ix">1</span><p>Podemos <b>transmitir información</b> a una persona o a un grupo.</p></div>
+      <div class="pt"><span class="ix">2</span><p>Posibilitan la <b>inserción de objetos</b> de diversa naturaleza: texto, imágenes, audio, video, gráficos…</p></div>
+      <div class="pt"><span class="ix">3</span><p>Una presentación generalmente está formada por una <b>secuencia de diapositivas</b>.</p></div>
+    </div>
+  </div></div>
+</section>
+
+<!-- 4 APPS -->
+<section class="slide" id="s-apps" data-title="Aplicaciones de gestores" data-sec="1">
+  <div class="topstrip"></div>
+  <div class="hd"><div><div class="kick a"><i>1</i>Planificación y creación</div><h2 class="t a">Aplicaciones de gestores de presentaciones</h2></div></div>
+  <div class="bd">
+    <div class="apps-top a"><div class="row" id="afilt" style="display:flex;gap:8px"><button class="chip on" data-f="all">Todas</button><button class="chip" data-f="esc">Escritorio</button><button class="chip" data-f="web">En línea</button><button class="chip" data-f="int">Interactivas / animadas</button></div><div class="hint">Elige una herramienta para conocerla</div></div>
+    <div class="apps">
+      <div class="agrid a" id="agrid"></div>
+      <div class="card ainfo a" id="ainfo"></div>
+    </div>
+  </div>
+</section>
+
+<!-- 5 ORBIT -->
+<section class="slide" id="s-necesita" data-title="¿Qué se necesita para diseñar?" data-sec="1">
+  <div class="topstrip"></div>
+  <div class="hd"><div><div class="kick a"><i>1</i>Planificación y creación</div><h2 class="t a">¿Para diseñar se <em>necesita</em> de…?</h2></div><div class="hint a">Pasa el cursor para detener la órbita y haz clic</div></div>
+  <div class="bd"><div class="orbitwrap">
+    <div class="orbit a" id="orbit"><div class="ring"></div><div class="rot" id="orot"></div><div class="core">¿Para diseñar<br>se necesita<br>de?</div></div>
+    <div class="card odesc a" id="odesc"></div>
+  </div></div>
+</section>
+
+<!-- 6 PASOS -->
+<section class="slide" id="s-pasos" data-title="Proceso de planificación: 7 pasos" data-sec="1">
+  <div class="topstrip"></div>
+  <div class="hd"><div><div class="kick a"><i>1</i>Planificación y creación</div><h2 class="t a">Planifica tu presentación en <em>7 pasos</em></h2></div><div class="hint a">Usa los pasos o los botones Anterior / Siguiente</div></div>
+  <div class="bd">
+    <div class="steps a" id="steps"></div>
+    <div class="card stpanel a" id="stpanel"></div>
+  </div>
+</section>
+
+<!-- 7 RETO -->
+<section class="slide" id="s-reto" data-title="Reto: ordena los pasos" data-sec="1">
+  <div class="topstrip"></div>
+  <div class="hd"><div><div class="kick a"><i>1</i>Reto rápido</div><h2 class="t a">¿Recuerdas el <em>orden</em>?</h2></div><div class="hint a">Toca los pasos en el orden correcto · toca un casillero lleno para quitarlo</div></div>
+  <div class="bd"><div class="game">
+    <div class="card pool a" id="pool"><h5>Pasos desordenados</h5></div>
+    <div class="card slots a"><h5>Tu orden</h5><div id="slots" style="display:flex;flex-direction:column;gap:7px"></div>
+      <div class="gbar"><button class="btn" id="gcheck">Comprobar</button><button class="btn ghost" id="greset">Reiniciar</button><span class="gmsg" id="gmsg"></span></div>
+    </div>
+  </div></div>
+</section>
+
+<!-- 8 10 PASOS -->
+<section class="slide" id="s-10" data-title="10 pasos para presentaciones atractivas" data-sec="1">
+  <div class="topstrip"></div>
+  <div class="hd"><div><div class="kick a"><i>1</i>Buenas prácticas</div><h2 class="t a">Presentaciones <em>atractivas</em> en 10 pasos</h2></div></div>
+  <div class="bd">
+    <div class="fliptop a"><div class="hint">Gira cada tarjeta para descubrir el consejo</div><div class="meter"><span id="fcount">0/10</span><div class="tr"><i id="fbar"></i></div><button class="chip" id="fall">Girar todas</button></div></div>
+    <div class="flipgrid" id="flipgrid"></div>
+  </div>
+</section>
+
+<!-- 9 ANTES / DESPUÉS -->
+<section class="slide" id="s-ba" data-title="Antes y después" data-sec="1">
+  <div class="topstrip"></div>
+  <div class="hd"><div><div class="kick a"><i>1</i>Buenas prácticas</div><h2 class="t a">Antes y <em>después</em></h2></div><div class="hint a">Arrastra el control para comparar</div></div>
+  <div class="bd"><div class="ba">
+    <div class="cmp a" id="cmp">
+      <div class="ms good-s"><div><h6>Ventas crecieron <em>32 %</em> en el segundo trimestre</h6><p>Impulsadas por el canal en línea.</p></div><div class="bars"><i style="height:35%"></i><i style="height:48%"></i><i style="height:55%"></i><i class="hot" style="height:92%"></i></div></div>
+      <div class="clip" id="clip"><div class="ms bad-s"><h6>RESULTADOS DE VENTAS!!!</h6><ul><li>Las ventas del primer trimestre fueron de cierto valor y luego en el segundo trimestre aumentaron gracias a muchas razones diferentes que vamos a explicar</li><li>El canal en línea tuvo mucha participación, más que el canal físico, lo cual es muy importante</li><li>También se analizaron otros factores, como la temporada, el clima y los precios</li><li>Hay que tener en cuenta que…</li><li>Además…</li><li>Por otro lado…</li></ul><div class="wa">¡¡¡WOW!!!</div></div></div>
+      <span class="lab l">Antes</span><span class="lab r">Después</span>
+      <div class="hdl" id="hdl"></div>
+    </div>
+    <div class="card fixes a" id="fixes"><h5>Lo que se corrigió</h5></div>
+  </div></div>
+</section>
+
+<!-- 10 TAMAÑO -->
+<section class="slide" id="s-tam" data-title="Tamaño de diapositiva" data-sec="1">
+  <div class="topstrip"></div>
+  <div class="hd"><div><div class="kick a"><i>1</i>Planificación y creación</div><h2 class="t a">Dimensiones y <em>tamaño</em> de diapositiva</h2></div><div class="route a"><b>Diseño</b><span>›</span>Tamaño de diapositiva<span>›</span>Personalizar</div></div>
+  <div class="bd"><div class="size">
+    <div class="ctl">
+      <div class="a"><h5>Tamaño predefinido</h5><div class="row" style="margin-top:8px"><button class="chip on" data-r="16:9">Panorámica 16:9</button><button class="chip" data-r="4:3">Estándar 4:3</button></div></div>
+      <div class="a"><h5>Otros tamaños de pantalla y papel</h5><div class="row" style="margin-top:8px" id="szmore"><button class="chip" data-r="16:10">Pantalla 16:10</button><button class="chip" data-r="A4">Papel A4</button><button class="chip" data-r="Carta">Carta</button><button class="chip" data-r="35mm">Diapositiva 35 mm</button><button class="chip" data-r="Banner">Banner</button></div></div>
+      <div class="sizeinfo a" id="szinfo">Cambia el tamaño y observa qué pasa con el contenido. Al reducir el tamaño, PowerPoint pregunta si quieres <b>Maximizar</b> o <b>Asegurar ajuste</b>.</div>
+    </div>
+    <div class="mframe a" id="szframe">
+      <div class="mslide" id="szslide" style="width:600px;height:337.5px"><div class="sz-cont" id="szcont"><div class="tb">Mi presentación</div><div class="tx"><i></i><i style="width:80%"></i><i style="width:90%"></i><i style="width:60%"></i></div><div class="im"></div></div><div class="ovf" id="ovf"></div></div>
+      <div class="dlg" id="szdlg"><div class="box"><h6>Microsoft PowerPoint</h6>Está escalando a un nuevo tamaño de diapositiva. ¿Quiere maximizar el tamaño del contenido o reducirlo para asegurarse de que cabe en la nueva diapositiva?
+        <div class="opts"><button class="opt" data-fit="max"><svg viewBox="0 0 80 50"><rect x="14" y="6" width="52" height="38" fill="#dce5d4" stroke="#076F3E"/><rect x="4" y="14" width="72" height="26" fill="#076F3E" opacity=".75"/></svg>Maximizar</button><button class="opt" data-fit="fit"><svg viewBox="0 0 80 50"><rect x="14" y="6" width="52" height="38" fill="#dce5d4" stroke="#076F3E"/><rect x="18" y="16" width="44" height="18" fill="#076F3E" opacity=".75"/></svg>Asegurar ajuste</button></div></div></div>
+    </div>
+  </div></div>
+</section>
+
+<!-- 11 TEMA -->
+<section class="slide" id="s-tema" data-title="Diseño y selección del tema" data-sec="1">
+  <div class="topstrip"></div>
+  <div class="hd"><div><div class="kick a"><i>1</i>Planificación y creación</div><h2 class="t a">Diseño y <em>selección del tema</em></h2></div><div class="route a"><b>Diseño</b><span>›</span>Temas<span>›</span>Variantes</div></div>
+  <div class="bd"><div class="theme">
+    <div class="a"><div class="tl" id="tlist"></div><h5 style="font:800 12px var(--hf);letter-spacing:.14em;text-transform:uppercase;color:var(--mut);margin-top:18px">Variantes de color</h5><div class="vars" id="tvars"></div><p style="font-size:13.5px;line-height:1.5;color:var(--mut);margin-top:14px">Un tema reúne colores, fuentes, efectos y fondo. Las variantes cambian la paleta sin perder el estilo.</p></div>
+    <div class="mframe a"><div class="mslide tm" id="tmslide"><div class="t1" id="tm1">Gestor de presentaciones</div><div class="t2" id="tm2">Curso de Nivelación · Ofimática</div><div class="acc b1" id="tmb"></div><div class="acc shape" id="tms"></div></div></div>
+  </div></div>
+</section>
+
+<!-- 12 EN LÍNEA -->
+<section class="slide" id="s-linea" data-title="Presentar en línea" data-sec="1">
+  <div class="topstrip"></div>
+  <div class="hd"><div><div class="kick a"><i>1</i>Planificación y creación</div><h2 class="t a">Presentar <em>en línea</em></h2></div><div class="route a"><b>Presentación con diapositivas</b><span>›</span>Presentar en línea</div></div>
+  <div class="bd"><div class="online">
+    <div class="olsteps a" id="olsteps"></div>
+    <div class="win a"><div class="tbar"><i></i><i></i><i></i>&nbsp; Presentación1 – PowerPoint</div>
+      <div class="ribtabs" id="oltabs"><span>Archivo</span><span>Inicio</span><span>Insertar</span><span>Diseño</span><span>Transiciones</span><span>Animaciones</span><span class="on">Presentación con diapositivas</span><span>Revisar</span><span>Vista</span></div>
+      <div class="ribbon" id="olrib"></div>
+      <div class="wbody" id="olbody"></div>
+    </div>
+  </div></div>
+</section>
+
+<!-- 13 PATRÓN -->
+<section class="slide" id="s-patron" data-title="Patrón de diapositivas" data-sec="1">
+  <div class="topstrip"></div>
+  <div class="hd"><div><div class="kick a"><i>1</i>Planificación y creación</div><h2 class="t a">Patrón de <em>diapositivas</em></h2></div><div class="route a"><b>Vista</b><span>›</span>Patrón de diapositivas</div></div>
+  <div class="bd"><div class="master" id="master">
+    <div class="mthumbs a" id="mthumbs"></div>
+    <div class="mstage a"><div class="mframe"><div class="mslide ms-s" id="mbig"></div></div></div>
+    <div class="card mctl a">
+      <h5>Editar el patrón</h5>
+      <div><div style="font-size:13px;font-weight:600;margin-bottom:6px">Color del tema</div><div class="sw" id="mcol"></div></div>
+      <div><div style="font-size:13px;font-weight:600;margin-bottom:6px">Fuente</div><div class="row" id="mfont" style="display:flex;gap:6px;flex-wrap:wrap"></div></div>
+      <div class="tg">Franja inferior <button class="on" id="mstrip"></button></div>
+      <div class="tg">Logotipo <button class="on" id="mlogo"></button></div>
+      <div class="mnote">El <b>patrón</b> es la miniatura más grande, arriba de la lista. Los <b>diseños asociados</b> están debajo y heredan todos sus cambios.</div>
+    </div>
+  </div></div>
+</section>
+
+<!-- 14 MARCADORES -->
+<section class="slide" id="s-marc" data-title="Marcadores de posición" data-sec="2">
+  <div class="topstrip"></div>
+  <div class="hd"><div><div class="kick a"><i>2</i>Diseño de diapositivas</div><h2 class="t a">Marcadores de <em>posición</em></h2></div><div class="hint a">Escribe en el título y elige un objeto</div></div>
+  <div class="bd"><div class="ph">
+    <div>
+      <p class="lead a" style="font-size:17.5px">Cada diseño de diapositiva contiene <b>marcadores de posición</b> de texto, vídeos, imágenes, gráficos, formas, imágenes prediseñadas, un fondo, etc. También contiene el <b>formato</b>: colores del tema, fuentes y efectos de esos objetos.</p>
+      <div class="phlist a" id="phlist"><span data-k="texto">Texto</span><span data-k="tabla">Tabla</span><span data-k="grafico">Gráfico</span><span data-k="smart">SmartArt</span><span data-k="imagen">Imagen</span><span data-k="video">Vídeo</span><span data-k="iconos">Iconos</span><span data-k="fondo">Fondo y formato</span></div>
+      <button class="btn ghost a" id="phreset" style="margin-top:16px">↺ Restablecer diapositiva</button>
+    </div>
+    <div class="mframe a"><div class="mslide phs" id="phs">
+      <div class="pt1" id="pt1" contenteditable="true" spellcheck="false">Haga clic para agregar título</div>
+      <div class="pb" id="pb"><span class="ph-hint">• Haga clic para agregar texto</span><div class="icons6" id="ic6"></div></div>
+    </div></div>
+  </div></div>
+</section>
+
+<!-- 15 NOTAS -->
+<section class="slide" id="s-notas" data-title="Notas del orador" data-sec="2">
+  <div class="topstrip"></div>
+  <div class="hd"><div><div class="kick a"><i>2</i>Diseño de diapositivas</div><h2 class="t a">Visualizar las <em>notas del orador</em></h2></div><div class="route a"><b>Barra de estado</b><span>›</span>Notas &nbsp;·&nbsp; <b>Vista</b><span>›</span>Página de notas</div></div>
+  <div class="bd"><div class="notes">
+    <div class="pp a" id="pp">
+      <div class="main"><div class="side"><i></i><i class="on"></i><i></i><i></i></div><div class="canvas"><div class="s"><div class="mini" style="font-size:22px"><div class="h">4.2 Diseño de diapositivas</div><div class="ln" style="width:80%"></div><div class="ln" style="width:65%"></div><div class="ln" style="width:72%"></div></div></div></div></div>
+      <div class="np"><textarea id="ntext">• Saludar y presentar el objetivo de la clase.
+• Mostrar dónde se encuentran los marcadores de posición.
+• Preguntar: ¿quién ha usado el patrón de diapositivas?</textarea></div>
+      <div class="sbar"><span style="margin-right:auto">Diapositiva 2 de 4 · Español (Ecuador)</span><button id="nbtn" class="pulse">📝 Notas</button><button id="pbtn">🖥 Vista Moderador</button></div>
+      <div class="pres" id="pres"><div class="top"><span>Vista Moderador · solo la ve quien presenta</span><span class="tmr" id="tmr">00:00</span><button class="btn" style="padding:6px 12px;font-size:12px" id="pclose">Finalizar</button></div>
+        <div><small>Diapositiva actual</small><div class="cur" style="margin-top:6px"><div class="mini" style="font-size:20px"><div class="h">4.2 Diseño de diapositivas</div><div class="ln" style="width:80%"></div><div class="ln" style="width:65%"></div></div></div></div>
+        <div class="rt"><small>Siguiente</small><div class="nx"><div class="mini" style="font-size:11px"><div class="h">4.3 Inserción de objetos</div><div class="ln"></div></div></div><small>Notas</small><div class="nt" id="pnotes"></div></div>
+      </div>
+    </div>
+    <div class="card ntip a"><h5>¿Para qué sirven?</h5><p>Las notas son un <b>guion privado</b>: tú las ves, la audiencia no.</p><p>1. Pulsa <b>Notas</b> en la barra de estado y escribe tus apuntes.</p><p>2. Activa la <b>Vista Moderador</b>: verás la diapositiva actual, la siguiente, tus notas y el tiempo.</p><p style="color:var(--mut);font-size:13.5px">Consejo: anota palabras clave, no párrafos completos.</p></div>
+  </div></div>
+</section>
+
+<!-- 16 HIPERVÍNCULOS -->
+<section class="slide" id="s-hiper" data-title="Insertar hipervínculos" data-sec="3">
+  <div class="topstrip"></div>
+  <div class="hd"><div><div class="kick a"><i>3</i>Inserción de objetos</div><h2 class="t a">Insertar <em>hipervínculos</em></h2></div><div class="route a"><b>Insertar</b><span>›</span>Vínculo &nbsp;·&nbsp; <b>Ctrl + K</b></div></div>
+  <div class="bd"><div class="hl">
+    <div class="hlwrap a">
+      <div class="hltool"><button class="btn" id="hlins" disabled>🔗 Insertar vínculo <kbd>Ctrl+K</kbd></button><span style="color:#bcd0bc;font-size:12.5px" id="hlstat">Selecciona un texto, una forma o una imagen</span></div>
+      <div class="hls" id="hls">
+        <div class="ttl">Recursos de la clase</div>
+        <div class="so txt" data-o="texto">Ver la guía de PowerPoint</div>
+        <div class="so shp" data-o="forma">Siguiente ▶</div>
+        <div class="so img" data-o="imagen"><svg viewBox="0 0 230 165" width="230" height="165"><rect width="230" height="165" fill="#dce5d4"/><circle cx="180" cy="40" r="18" fill="#F2B705"/><path d="M0 165l70-80 50 50 35-30 75 60z" fill="#076F3E"/><path d="M0 165l70-80 40 40" fill="#798C52"/></svg></div>
+        <div class="tip" id="htip"></div>
+      </div>
+      <div class="hdlg" id="hdlg"><div class="box">
+        <div class="bh">Insertar hipervínculo <button id="hx">✕</button></div>
+        <div class="bb"><div class="lt" id="hlt"></div><div class="rt" id="hrt"></div></div>
+        <div class="bf"><button class="btn ghost" id="hcancel">Cancelar</button><button class="btn" id="hok">Aceptar</button></div>
+      </div></div>
+    </div>
+    <div class="card hlside a">
+      <h5>Se puede vincular a…</h5>
+      <div class="hstep on" id="hs1"><i>1</i><span>Selecciona <b>texto</b>, <b>forma</b> o <b>imagen</b> para usarlo como hipervínculo.</span></div>
+      <div class="hstep" id="hs2"><i>2</i><span>Abre <b>Insertar › Vínculo</b> o pulsa <b>Ctrl + K</b>.</span></div>
+      <div class="hstep" id="hs3"><i>3</i><span>Elige el destino: sitio web o archivo, diapositiva de esta u otra presentación, nuevo documento o correo electrónico.</span></div>
+      <div class="hlog" id="hlog">Vínculos creados: ninguno todavía.</div>
+    </div>
+  </div></div>
+</section>
+
+<!-- 17 ANIMACIONES -->
+<section class="slide" id="s-anim" data-title="Animaciones" data-sec="4">
+  <div class="topstrip"></div>
+  <div class="hd"><div><div class="kick a"><i>4</i>Animación y transición</div><h2 class="t a">Tipos de <em>animaciones</em></h2></div><div class="route a"><b>Animaciones</b><span>›</span>Agregar animación</div></div>
+  <div class="bd"><div class="anim">
+    <div class="atypes a" id="atypes"></div>
+    <div class="astage a" id="astage"><svg class="apath" id="apath" viewBox="0 0 560 300" preserveAspectRatio="none"></svg><div class="aobj" id="aobj">Objeto</div></div>
+    <div class="aside a"><div class="adesc" id="adesc"></div><div class="efx" id="efx"></div></div>
+  </div></div>
+</section>
+
+<!-- 18 TRANSICIONES -->
+<section class="slide" id="s-trans" data-title="Transiciones" data-sec="4">
+  <div class="topstrip"></div>
+  <div class="hd"><div><div class="kick a"><i>4</i>Animación y transición</div><h2 class="t a">Tipos de <em>transiciones</em></h2></div><div class="route a"><b>Transiciones</b><span>›</span>Transición a esta diapositiva</div></div>
+  <div class="bd"><div class="tr">
+    <div class="tcat a" id="tcat"></div>
+    <div class="tstage a"><div class="tview" id="tview">
+      <div class="sl A" id="tA"><div class="c"><h6>Diapositiva 1</h6><p>Contenido actual de la presentación</p><span class="num">1</span></div></div>
+      <div class="sl B" id="tB"><div class="c"><h6>Diapositiva 2</h6><p>La transición controla cómo llega esta diapositiva</p><span class="num">2</span></div></div>
+    </div><div class="tbar2"><span>Transición: <b id="tname">elige una</b></span><button class="btn" id="treplay" style="padding:8px 14px;font-size:13px">↻ Vista previa</button></div></div>
+  </div></div>
+</section>
+
+<!-- 19 QUIZ -->
+<section class="slide" id="s-quiz" data-title="Autoevaluación" data-sec="5">
+  <div class="topstrip"></div>
+  <div class="hd"><div><div class="kick a">Autoevaluación</div><h2 class="t a">¿Cuánto <em>aprendiste</em>?</h2></div></div>
+  <div class="bd"><div class="quiz">
+    <div class="card qcard a" id="qcard"></div>
+    <div class="card score a"><div style="font:800 13px var(--hf);letter-spacing:.14em;text-transform:uppercase;color:var(--mut)">Puntaje</div><div class="ring"><svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="42" fill="none" stroke="#DCE5D4" stroke-width="10"/><circle id="qring" cx="50" cy="50" r="42" fill="none" stroke="#076F3E" stroke-width="10" stroke-linecap="round" stroke-dasharray="264" stroke-dashoffset="264" style="transition:stroke-dashoffset .6s"/></svg><div class="v" id="qscore">0</div></div><div class="qdots" id="qdots"></div><button class="btn ghost" id="qreset">↺ Reiniciar</button></div>
+  </div></div>
+</section>
+
+<!-- 20 RECURSOS -->
+<section class="slide" id="s-recursos" data-title="Recursos complementarios" data-sec="5">
+  <div class="topstrip"></div>
+  <div class="hd"><div><div class="kick a">Para seguir aprendiendo</div><h2 class="t a">Recursos <em>complementarios</em></h2></div></div>
+  <div class="bd"><div class="res">
+    <a class="vid a" href="https://youtu.be/5-mCjVRXdO8" target="_blank" rel="noopener"><div class="play"></div><h5>Curso de PowerPoint completo</h5><span>Video en YouTube · youtu.be/5-mCjVRXdO8</span></a>
+    <div class="refs">
+      <a class="card ref a" href="https://ast.aragon.es/sites/default/files/primerospasospowerpoint2016.pdf" target="_blank" rel="noopener"><div class="ic">PDF</div><div><h6>Guía de Microsoft PowerPoint 2016</h6><p>Aragonesa (11 de septiembre de 2017).</p><div class="u">ast.aragon.es/…/primerospasospowerpoint2016.pdf</div></div></a>
+      <a class="card ref a" href="https://edu.gcfglobal.org/es/power-point-2016/" target="_blank" rel="noopener"><div class="ic">WEB</div><div><h6>Curso gratis de PowerPoint 2016 en GCFGlobal</h6><p>GCFGlobal (junio de 2018).</p><div class="u">edu.gcfglobal.org/es/power-point-2016/</div></div></a>
+      <div class="card ref a" style="cursor:default"><div class="ic" style="background:var(--o);color:#222">i</div><div><h6>Infografía de los 10 pasos</h6><p>“Cómo diseñar presentaciones atractivas en 10 pasos”, infografía de @usvirtualempleo usada en el material del curso.</p></div></div>
+    </div>
+  </div></div>
+</section>
+
+<!-- 21 GRACIAS -->
+<section class="slide dark" id="s-gracias" data-title="¡Gracias!" data-sec="5">
+  <canvas id="confetti"></canvas>
+  <div class="in">
+    <div class="cv-pre a" style="justify-content:center">Paso 10 · cierra con una frase positiva</div>
+    <h2 class="a" id="thanks"><span style="--k:0">¡</span><span style="--k:1">G</span><span style="--k:2">R</span><span style="--k:3">A</span><span style="--k:4">C</span><span style="--k:5">I</span><span style="--k:6">A</span><span style="--k:7">S</span><span style="--k:8">!</span></h2>
+    <p class="qt a">“Una buena presentación no muestra todo lo que sabes: <b>muestra lo que tu audiencia necesita recordar</b>.”</p>
+    <p class="a" style="font-size:13px;color:#9fc1a2"><b style="color:#fff;font-size:15px">Cristian Zuñiga, Mgs.</b> · Toca “¡Gracias!” para celebrar · Ofimática · Curso de Nivelación SI-2026</p>
+  </div>
+</section>
+
+<footer id="foot"><div class="stripes"></div><div class="band"><span>UNIDAD DE ADMISIÓN</span><span class="sep"></span><span>CURSO DE NIVELACIÓN SI-2026</span><span class="sep"></span><span>OFIMÁTICA</span><span class="sep"></span><span>CRISTIAN ZUÑIGA, MGS.</span><div class="brand"><span class="num" id="num">1 / 21</span><b>ESPE</b><small>Universidad de las<br>Fuerzas Armadas</small></div></div></footer>
+</div>
+</div>
+
+<div id="ctrl">
+  <button id="bprev" title="Anterior (←)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M15 5l-7 7 7 7"/></svg></button>
+  <button id="bnext" title="Siguiente (→)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M9 5l7 7-7 7"/></svg></button>
+  <button id="bov" title="Vista general (O)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></button>
+  <button id="blaser" title="Puntero láser (L)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/></svg></button>
+  <button id="bfs" title="Pantalla completa (F)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
+</div>
+<div id="help"><span><kbd>←</kbd> <kbd>→</kbd> navegar</span><span><kbd>O</kbd> vista general</span><span><kbd>L</kbd> láser</span><span><kbd>F</kbd> pantalla completa</span></div>
+<div id="overview"><h3>Todas las diapositivas</h3><p>Elige una para saltar directamente · <kbd style="background:#fff2;padding:2px 6px;border-radius:4px;color:#fff">Esc</kbd> para cerrar</p><div id="ovgrid"></div></div>
+<div id="laser"></div>
+
+<script>
+(()=>{
+const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>[...r.querySelectorAll(s)];
+const el=(t,c,h)=>{const e=document.createElement(t);if(c)e.className=c;if(h!=null)e.innerHTML=h;return e};
+const stage=$('#stage'), slides=$$('.slide'), N=slides.length;
+const SEC={0:['Inicio','#A3BA8C'],1:['Planificación y creación','#076F3E'],2:['Diseño de diapositivas','#798C52'],3:['Inserción de objetos','#F2B705'],4:['Animación y transición','#D10C0A'],5:['Cierre','#0A4D2B']};
+let cur=0;
+/* stagger indices */
+slides.forEach(s=>$$('.a',s).forEach((e,i)=>e.style.setProperty('--i',i)));
+let idleT;function wake(){document.body.classList.remove('idle');clearTimeout(idleT);idleT=setTimeout(()=>{if(!$('#overview').classList.contains('open'))document.body.classList.add('idle')},2800)}
+addEventListener('pointermove',wake);addEventListener('keydown',wake);addEventListener('touchstart',wake,{passive:true});wake();
+function fit(){const s=Math.min(innerWidth/1280,innerHeight/720)*.97;stage.style.transform=`translate(-50%,-50%) scale(${s})`}
+addEventListener('resize',fit);fit();
+const hooks={};
+function go(i,fromHash){
+  i=Math.max(0,Math.min(N-1,i));
+  if(i===cur&&slides[i].classList.contains('active'))return;
+  slides.forEach((s,k)=>{s.classList.toggle('active',k===i);s.classList.toggle('back',k<i)});
+  const old=cur;cur=i;
+  $('#num').textContent=`${i+1} / ${N}`;
+  $('#progress').style.width=((i+1)/N*100)+'%';
+  $('#foot').style.display='';
+  if(!fromHash){try{history.replaceState(null,'','#d'+(i+1))}catch(e){location.hash='d'+(i+1)}}
+  const h=hooks[slides[i].id];if(h)h();
+  const lv=slides[old]&&hooks['leave-'+slides[old].id];if(lv&&old!==i)lv();
+}
+const next=()=>go(cur+1), prev=()=>go(cur-1);
+const byId=id=>slides.findIndex(s=>s.id===id);
+$$('[data-next]').forEach(b=>b.onclick=next);
+$$('[data-goto]').forEach(b=>b.onclick=()=>go(byId(b.dataset.goto)));
+$('#bnext').onclick=next;$('#bprev').onclick=prev;
+/* overview */
+const ov=$('#overview'),ovg=$('#ovgrid');
+slides.forEach((s,i)=>{const sc=SEC[s.dataset.sec];const b=el('button','ov',`<div class="n">${String(i+1).padStart(2,'0')}</div><div class="s">${sc[0]}</div><div class="tt">${s.dataset.title}</div>`);b.style.setProperty('--c',sc[1]);b.onclick=()=>{toggleOv(false);go(i)};ovg.append(b)});
+function toggleOv(o){o=o??!ov.classList.contains('open');ov.classList.toggle('open',o);$$('.ov',ovg).forEach((b,i)=>b.classList.toggle('cur',i===cur));$('#bov').classList.toggle('on',o)}
+$('#bov').onclick=()=>toggleOv();$$('[data-overview]').forEach(b=>b.onclick=()=>toggleOv(true));
+/* laser */
+const lz=$('#laser');function toggleLaser(){document.body.classList.toggle('laser');$('#blaser').classList.toggle('on')}
+$('#blaser').onclick=toggleLaser;addEventListener('pointermove',e=>{lz.style.left=e.clientX+'px';lz.style.top=e.clientY+'px'});
+function fs(){try{if(!document.fullscreenElement)document.documentElement.requestFullscreen().catch(()=>{});else document.exitFullscreen()}catch(e){}}
+$('#bfs').onclick=fs;
+addEventListener('keydown',e=>{
+  const t=e.target;if(t.isContentEditable||/INPUT|TEXTAREA/.test(t.tagName))return;
+  if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='k'&&slides[cur].id==='s-hiper'){e.preventDefault();hooks.ctrlK&&hooks.ctrlK();return}
+  if(e.ctrlKey||e.metaKey||e.altKey)return;
+  const k=e.key;
+  if(['ArrowRight','PageDown',' '].includes(k)){e.preventDefault();next()}
+  else if(['ArrowLeft','PageUp'].includes(k)){e.preventDefault();prev()}
+  else if(k==='Home')go(0);else if(k==='End')go(N-1);
+  else if(k==='o'||k==='O')toggleOv();else if(k==='Escape')toggleOv(false);
+  else if(k==='l'||k==='L')toggleLaser();else if(k==='f'||k==='F')fs();
+});
+/* swipe */
+let sx=null,sy=null;stage.addEventListener('touchstart',e=>{sx=e.touches[0].clientX;sy=e.touches[0].clientY},{passive:true});
+stage.addEventListener('touchend',e=>{if(sx==null)return;const dx=e.changedTouches[0].clientX-sx,dy=e.changedTouches[0].clientY-sy;if(Math.abs(dx)>70&&Math.abs(dx)>Math.abs(dy)*1.5&&!e.target.closest('.cmp,.ms-s,.astage'))dx<0?next():prev();sx=null},{passive:true});
+
+/* ===== S1 floaters ===== */
+(()=>{const f=$('#floaters');const cfg=[[880,90,230,.7,-8],[1010,300,180,.5,6],[760,380,150,.35,-3],[1090,520,130,.3,10],[930,560,110,.25,-12]];
+cfg.forEach(([x,y,w,d,r])=>{const c=el('div','fl','<div class="bar"></div><div class="l s"></div><div class="l"></div><div class="l" style="width:60%"></div><div class="bl"></div>');Object.assign(c.style,{left:x+'px',top:y+'px',width:w+'px',height:w*9/16+'px',transform:`rotate(${r}deg)`});c.dataset.d=d;c.dataset.r=r;f.append(c)});
+$('#s-portada').addEventListener('pointermove',e=>{const r=stage.getBoundingClientRect();const mx=(e.clientX-r.left)/r.width-.5,my=(e.clientY-r.top)/r.height-.5;$$('.fl',f).forEach(c=>{const d=+c.dataset.d;c.style.transform=`translate(${mx*-60*d}px,${my*-60*d}px) rotate(${+c.dataset.r+mx*6}deg)`})});})();
+
+/* ===== S3 blob ===== */
+(()=>{let n=0;const pts=$$('#pts .pt');const b=$('#blob');
+b.onclick=()=>{if(n<pts.length){pts[n++].classList.add('on')}else{n=0;pts.forEach(p=>p.classList.remove('on'))}b.querySelector('small').textContent=n<pts.length?`${n}/3 · toca otra vez`:'¡listo! toca para reiniciar'};
+hooks['s-que']=()=>{};})();
+
+/* ===== S4 apps ===== */
+(()=>{const A=[
+['PowerPoint','P','#C43E1C',['esc','web'],'Escritorio y en línea','El gestor más usado en educación y empresas. Parte de Microsoft 365; incluye temas, patrón de diapositivas, animaciones, transiciones y Vista Moderador.'],
+['Google Slides','G','#E8A600',['web'],'En línea · colaborativo','Presentaciones en el navegador, guardadas en Google Drive. Varias personas pueden editar a la vez y comentar.'],
+['Keynote','K','#1C7BE0',['esc'],'Escritorio (Apple)','Gestor de Apple para macOS e iOS, conocido por sus transiciones cinematográficas y diseño cuidado.'],
+['Canva','C','#00A3B4',['web','int'],'En línea · plantillas','Plataforma de diseño gráfico con miles de plantillas de presentaciones, elementos y animaciones listos para usar.'],
+['Prezi','Pz','#2B6FE0',['web','int'],'En línea · lienzo con zoom','Usa un lienzo amplio y movimientos de zoom en lugar de diapositivas en secuencia: presentaciones no lineales.'],
+['Genially','Gn','#5A3FD8',['web','int'],'En línea · interactivo','Crea contenidos interactivos: presentaciones, infografías y juegos con botones, ventanas emergentes y animaciones.'],
+['Emaze','E','#E4405F',['web','int'],'En línea','Presentaciones en línea con plantillas animadas, efectos 3D y opciones para publicar en la web.'],
+['Powtoon','Pw','#F05A28',['web','int'],'En línea · animación','Combina presentaciones con videos animados: personajes, escenas y narración para explicar ideas.'],
+['Zoho Show','Z','#D32F2F',['web'],'En línea','Gestor de presentaciones en la nube de la suite Zoho, con edición colaborativa y transmisión en vivo.'],
+['Haiku Deck','H','#3A9C9C',['web'],'En línea · minimalista','Prioriza imágenes grandes y poco texto: ideal para aplicar el consejo “no cargues de texto”.'],
+['Knovio','Kn','#7A8B99',['web'],'En línea · video','Une tus diapositivas con video o audio del presentador para crear presentaciones grabadas.'],
+['Impress','I','#2E7D32',['esc'],'Escritorio · software libre','Gestor de presentaciones de LibreOffice: gratuito, de código abierto y compatible con archivos .pptx.']];
+const g=$('#agrid'),info=$('#ainfo');let sel=0;
+function show(i){sel=i;const a=A[i];$$('.app',g).forEach((b,k)=>b.classList.toggle('sel',k===i));info.innerHTML=`<div class="swap" style="display:flex;flex-direction:column;gap:14px"><div class="av" style="background:${a[2]}">${a[1]}</div><h4>${a[0]}</h4><div class="tags"><span>${a[4]}</span></div><p>${a[5]}</p></div>`}
+A.forEach((a,i)=>{const b=el('button','app',`<span class="av" style="background:${a[2]}">${a[1]}</span><b>${a[0]}</b>`);b.dataset.t=a[3].join(' ');b.onclick=()=>show(i);g.append(b)});
+$$('#afilt .chip').forEach(c=>c.onclick=()=>{$$('#afilt .chip').forEach(x=>x.classList.toggle('on',x===c));const f=c.dataset.f;$$('.app',g).forEach(b=>b.classList.toggle('dim',f!=='all'&&!b.dataset.t.includes(f)))});
+show(0);})();
+
+/* ===== S5 orbit ===== */
+(()=>{const D=[['Uso de recursos interactivos','Hipervínculos, animaciones, video y elementos que mantengan la atención y la participación de la audiencia.'],['Objetivos claros','Define qué quieres lograr: informar, persuadir, enseñar o demostrar. Todo en la presentación debe apuntar a ese objetivo.'],['Estructura organizada','Introducción, cuerpo y conclusión en un orden lógico, para que la audiencia siga el hilo sin perderse.'],['Contenido relevante','Incluye solo lo que aporta al mensaje y le interesa a tu audiencia. Lo demás, fuera.'],['Consistencia visual','Misma plantilla, paleta de colores y tipografía en todas las diapositivas: transmite orden y profesionalismo.']];
+const r=$('#orot'),d=$('#odesc');const R=195,C=235;
+function show(i){$$('.node',r).forEach((n,k)=>n.classList.toggle('on',k===i));d.innerHTML=`<div class="swap-in"><div class="big">0${i+1}</div><h4>${D[i][0]}</h4><p>${D[i][1]}</p><div class="dots">${D.map((_,k)=>`<i class="${k===i?'on':''}"></i>`).join('')}</div></div>`}
+D.forEach((x,i)=>{const a=-Math.PI/2+i*2*Math.PI/D.length;const n=el('button','node',x[0]);n.style.left=C+R*Math.cos(a)+'px';n.style.top=C+R*Math.sin(a)+'px';n.onclick=()=>show(i);r.append(n)});
+show(1);})();
+
+/* ===== S6 steps ===== */
+(()=>{const P=[
+['Comprende la tarea','¿Sabes exactamente lo que tienes que hacer?','Ya sea una presentación en un contexto laboral o estudiantil, es esencial que tengas claro lo que vas a presentar y lo que se espera que ofrezcas.','<path d="M30 20h50l20 20v60H30z"/><path d="M80 20v20h20M45 60h40M45 74h40M45 88h25"/>'],
+['Considera el propósito','¿Para qué es esta presentación?','¿Es para informar, persuadir, lanzar un producto o servicio, demostrar evidencia o conocimiento? Definir tus objetivos principales desde el inicio es la primera etapa para alcanzarlos.','<circle cx="64" cy="64" r="44"/><circle cx="64" cy="64" r="28"/><circle cx="64" cy="64" r="10"/><path d="M64 64l40-40M96 24h8v8"/>'],
+['Considera a la audiencia','¿Hablarás con gerentes, colegas, socios, estudiantes, compañeros o tutores?','Adapta tu charla a la audiencia que esperas: el contenido y el enfoque deben ser interesantes y relevantes para ellos.','<circle cx="44" cy="48" r="14"/><circle cx="84" cy="48" r="14"/><path d="M18 100c0-16 12-28 26-28s26 12 26 28M58 100c0-16 12-28 26-28s26 12 26 28"/>'],
+['Investiga el tema','¿Cómo y dónde obtendrás la información?','Tus fuentes pueden estar en línea, en libros u otra literatura, o venir de colegas. Selecciona fuentes apropiadas y haz las referencias correspondientes.','<circle cx="56" cy="56" r="30"/><path d="M78 78l30 30"/><path d="M44 56h24M56 44v24"/>'],
+['Planifica y diseña la estructura','¿Cómo vas a organizar la información?','Decide qué contenido irá en cada sección principal —Introducción, Cuerpo y Conclusión— y en qué orden.','<rect x="20" y="22" width="88" height="20" rx="4"/><rect x="20" y="54" width="88" height="20" rx="4"/><rect x="20" y="86" width="88" height="20" rx="4"/>'],
+['Planifica el contenido detallado','¿Qué información específica va en cada sección?','Divide el cuerpo principal en subsecciones y puntos clave, y decide exactamente qué detalles incluirás en cada parte.','<rect x="18" y="22" width="40" height="40" rx="4"/><rect x="70" y="22" width="40" height="40" rx="4"/><rect x="18" y="74" width="40" height="32" rx="4"/><rect x="70" y="74" width="40" height="32" rx="4"/>'],
+['Practica y revisa','¿Te sientes seguro y listo?','Practica haciendo tu presentación: grábate y evalúate. Revisa el contenido y el estilo de entrega, y practica de nuevo hasta que te sientas seguro.','<rect x="22" y="26" width="84" height="56" rx="6"/><path d="M56 42l22 12-22 12z"/><path d="M44 104h40M64 82v22"/>']];
+const s=$('#steps'),p=$('#stpanel');let k=0;
+function show(i){k=i;$$('.st',s).forEach((b,j)=>{b.classList.toggle('on',j===i);b.classList.toggle('done',j<i)});const x=P[i];
+p.innerHTML=`<div class="ico swap-in"><span class="bn">${i+1}</span><svg viewBox="0 0 128 128">${x[3]}</svg></div><div class="swap-in"><h4>${x[0]}</h4><div class="q">${x[1]}</div><p>${x[2]}</p><div class="nav"><button class="btn ghost" ${i?'':'disabled'} data-d="-1">← Anterior</button><button class="btn" ${i<6?'':'disabled'} data-d="1">Siguiente paso →</button></div></div>`;
+$$('[data-d]',p).forEach(b=>b.onclick=()=>show(k+ +b.dataset.d))}
+P.forEach((x,i)=>{const b=el('button','st',`<div class="n">${i+1}</div><div class="l">${x[0]}</div>`);b.onclick=()=>show(i);s.append(b)});show(0);
+window.__P=P;})();
+
+/* ===== S7 game ===== */
+(()=>{const P=window.__P.map(x=>x[0]);const pool=$('#pool'),slots=$('#slots'),msg=$('#gmsg');let order=[];
+function build(){order=[];$$('.tok',pool).forEach(t=>t.remove());msg.textContent='';
+  const sh=P.map((x,i)=>i).sort(()=>Math.random()-.5);
+  sh.forEach(i=>{const t=el('button','tok',P[i]);t.dataset.i=i;t.onclick=()=>{if(order.length>=7)return;order.push(i);t.classList.add('used');render()};pool.append(t)});render()}
+function render(){slots.innerHTML='';for(let j=0;j<7;j++){const i=order[j];const s=el('div','slot'+(i!=null?' f':''),`<span class="k">${j+1}</span>${i!=null?P[i]:''}`);if(i!=null)s.onclick=()=>{order.splice(j,1);$(`.tok[data-i="${i}"]`,pool).classList.remove('used');render()};slots.append(s)}}
+$('#gcheck').onclick=()=>{if(order.length<7){msg.textContent='Completa los 7 casilleros.';msg.style.color='var(--mut)';return}let ok=0;$$('.slot',slots).forEach((s,j)=>{const g=order[j]===j;ok+=g;s.classList.add(g?'ok':'bad')});msg.textContent=ok===7?'¡Perfecto! 7/7 🎉':`${ok}/7 correctos. Toca los rojos para corregir.`;msg.style.color=ok===7?'var(--v)':'var(--r)'};
+$('#greset').onclick=build;build();})();
+
+/* ===== S8 flip ===== */
+(()=>{const T=[
+['Engancha a tu audiencia desde el principio','Abre con un título prometedor, una imagen evocadora o una pregunta retórica que capte la atención y despierte curiosidad.','<rect x="6" y="10" width="36" height="26" rx="3"/><circle cx="30" cy="23" r="4"/>'],
+['Deja el protagonismo al contenido','Usa siempre la misma plantilla, limita la paleta de colores y no la sobrecargues con elementos que distraigan.','<rect x="6" y="8" width="36" height="30" rx="3"/><path d="M12 16h24M12 24h14"/>'],
+['No cargues de texto las diapositivas','Para eso ya están los libros. Pocas palabras, ideas claras.','<path d="M8 12h32M8 18h32M8 24h32M8 30h20"/><path d="M30 28l10 10M40 28L30 38"/>'],
+['Elige una tipografía sin serifa','No combines más de 2 estilos y usa mínimo 24 puntos. No abuses de mayúsculas, cursivas ni subrayado.','<path d="M10 38L22 10l12 28M14 28h16"/>'],
+['Evita las listas y enumeraciones','Una idea por diapositiva y nunca más de cuatro viñetas, alineadas y con interlineado amplio.','<path d="M8 12l3 3 5-6M8 24l3 3 5-6M8 36l3 3 5-6M22 12h18M22 24h18M22 36h18"/>'],
+['Escoge un fondo liso y neutro','Lo más acertado: fuente oscura sobre fondo claro o, en su defecto, fuente clara sobre fondo oscuro.','<rect x="6" y="8" width="18" height="30"/><rect x="24" y="8" width="18" height="30"/><path d="M10 20h10M28 20h10"/>'],
+['No uses imágenes como decoración','Emplea solo aquellas que ayuden a entender y recordar los conceptos.','<rect x="6" y="10" width="36" height="28" rx="3"/><path d="M6 32l10-10 8 8 6-5 12 9"/>'],
+['Gráficas que se entiendan solas','Que no requieran largas explicaciones. Los colores cálidos te ayudan a destacar los datos más relevantes.','<path d="M8 40V28M18 40V18M28 40V24M38 40V10"/>'],
+['No abuses de las animaciones','Usa algunas sencillas para marcar el ritmo de lectura, pero evita las más espectaculares.','<circle cx="24" cy="24" r="16"/><path d="M20 16l10 8-10 8z"/>'],
+['Cierra con una frase positiva','Termina con una frase inspiradora… y no olvides dar las gracias.','<path d="M10 30c0-8 4-14 10-16M26 30c0-8 4-14 10-16"/><circle cx="14" cy="32" r="5"/><circle cx="30" cy="32" r="5"/>']];
+const g=$('#flipgrid');let seen=new Set();
+function upd(){$('#fcount').textContent=seen.size+'/10';$('#fbar').style.width=seen.size*10+'%'}
+T.forEach((t,i)=>{const f=el('div','flip',`<div class="in"><div class="f"><span class="n">${i+1}</span><h5>${t[0]}</h5><svg viewBox="0 0 48 48">${t[2]}</svg></div><div class="b"><span class="n">${i+1}</span><p>${t[1]}</p></div></div>`);f.onclick=()=>{f.classList.toggle('on');seen.add(i);upd()};g.append(f)});
+$('#fall').onclick=()=>{const all=$$('.flip',g).every(f=>f.classList.contains('on'));$$('.flip',g).forEach((f,i)=>setTimeout(()=>{f.classList.toggle('on',!all);seen.add(i);upd()},i*60))};})();
+
+/* ===== S9 before/after ===== */
+(()=>{const c=$('#cmp'),clip=$('#clip'),h=$('#hdl'),fx=$('#fixes');
+const F=[['Título largo, en mayúsculas y con signos','Título breve con el dato clave',.15],['Fuente con serifa, cursiva y subrayado','Tipografía sin serifa, legible',.3],['Fondo con degradado chillón','Fondo liso y neutro',.45],['Seis viñetas con párrafos','Una idea por diapositiva',.6],['Texto decorativo “¡¡¡WOW!!!”','Sin adornos que distraen',.75],['Datos sin gráfico','Gráfica clara con color cálido',.9]];
+F.forEach(f=>fx.append(el('div','fx',`<i>✕</i><span>${f[0]}</span>`)));
+function set(p){p=Math.max(0,Math.min(1,p));clip.style.clipPath=`inset(0 ${100-p*100}% 0 0)`;h.style.left=p*100+'%';
+ $$('.fx',fx).forEach((e,k)=>{const ok=p<F[k][2]+.05;e.classList.toggle('ok',ok);e.querySelector('i').textContent=ok?'✓':'✕';e.querySelector('span').textContent=ok?F[k][1]:F[k][0]})}
+let drag=false;const pos=e=>{const r=c.getBoundingClientRect();set((e.clientX-r.left)/r.width)};
+c.addEventListener('pointerdown',e=>{drag=true;c.setPointerCapture(e.pointerId);pos(e)});c.addEventListener('pointermove',e=>drag&&pos(e));c.addEventListener('pointerup',()=>drag=false);
+set(.97);
+hooks['s-ba']=()=>{set(.97);let p=.97;const id=setInterval(()=>{p-=.02;set(p);if(p<=.5)clearInterval(id)},16)};})();
+
+/* ===== S10 tamaño ===== */
+(()=>{const R={'16:9':[16,9,'Panorámica (16:9): el formato por defecto, ideal para monitores y proyectores modernos.'],'4:3':[4,3,'Estándar (4:3): formato clásico de proyectores antiguos.'],'16:10':[16,10,'Pantalla 16:10: frecuente en portátiles.'],'A4':[297,210,'Papel A4 (297 × 210 mm): para imprimir diapositivas.'],'Carta':[279,216,'Papel carta (27,9 × 21,6 cm): para imprimir en formato carta.'],'35mm':[3,2,'Diapositivas de 35 mm (3:2).'],'Banner':[8,1,'Banner (8:1): tiras horizontales para web o cartelería.']};
+const sl=$('#szslide'),ct=$('#szcont'),dlg=$('#szdlg'),info=$('#szinfo'),ovf=$('#ovf');let curR='16:9',pend=null;
+function dims(k){const[a,b]=R[k];const W=600,H=380;let w=W,h=W*b/a;if(h>H){h=H;w=H*a/b}return[w,h]}
+function apply(k,mode){curR=k;const[w,h]=dims(k);sl.style.width=w+'px';sl.style.height=h+'px';
+ const sc=Math.min(w/600,h/337.5);let s=mode==='max'?Math.max(w/600,h/337.5):sc;if(k==='16:9')s=1;
+ ct.style.transform=`scale(${s})`;ovf.style.opacity=mode==='max'&&k!=='16:9'?1:0;
+ $$('.chip[data-r]').forEach(c=>c.classList.toggle('on',c.dataset.r===k));
+ info.innerHTML=`<b>${R[k][2]}</b><br>`+(k==='16:9'?'El contenido está en su tamaño original.':mode==='max'?'<span style="color:var(--r)"><b>Maximizar:</b> el contenido conserva su tamaño y puede quedar recortado fuera de la diapositiva (línea roja).</span>':'<b>Asegurar ajuste:</b> el contenido se reduce para que todo quepa en la nueva diapositiva.')}
+$$('.chip[data-r]').forEach(c=>c.onclick=()=>{const k=c.dataset.r;if(k===curR)return;if(k==='16:9'){apply(k);return}pend=k;dlg.classList.add('open')});
+$$('[data-fit]').forEach(b=>b.onclick=()=>{dlg.classList.remove('open');apply(pend,b.dataset.fit)});
+dlg.onclick=e=>{if(e.target===dlg)dlg.classList.remove('open')};
+apply('16:9');})();
+
+/* ===== S11 tema ===== */
+(()=>{const T=[
+['Office','#ffffff','#1f2a22','Archivo',['#076F3E','#D10C0A','#F2B705','#2E6FD8']],
+['Faceta','#f3f7ee','#1d4d2c','Archivo',['#5B9B37','#2E8B57','#8DB33A','#14532D']],
+['Ion','#0f5257','#ffffff','Inter',['#F2B705','#7FD1B9','#FF8A5B','#ffffff']],
+['Retrospección','#fbf6ea','#3b2f2a','Merriweather',['#B4532A','#7A8B4F','#C59D3F','#5B6C8F']],
+['Integral','#1e2533','#f4f4f4','Archivo',['#6EA8FE','#A3BA8C','#F2B705','#E85D75']],
+['Sector','#ffffff','#0A4D2B','Inter',['#798C52','#076F3E','#D10C0A','#A3BA8C']]];
+const L=$('#tlist'),V=$('#tvars'),s=$('#tmslide');let ti=0,vi=0;
+function paint(){const t=T[ti],acc=t[4][vi];s.style.background=t[1];s.style.color=t[2];$('#tm1').style.fontFamily=t[3];$('#tm2').style.fontFamily=t[3];$('#tm1').style.color=ti===2||ti===4?t[2]:acc;$('#tmb').style.background=acc;$('#tms').style.background=`linear-gradient(140deg,${acc},${t[4][(vi+1)%4]})`;
+ $$('.th',L).forEach((b,k)=>b.classList.toggle('on',k===ti));V.innerHTML='';t[4].forEach((c,k)=>{const b=el('button',k===vi?'on':'');b.style.background=c;b.title='Variante '+(k+1);b.onclick=()=>{vi=k;paint()};V.append(b)})}
+T.forEach((t,i)=>{const b=el('button','th',`<div class="pv" style="background:${t[1]};color:${t[4][0]};font-family:${t[3]}">Aa<span style="position:absolute;right:8px;bottom:8px;display:flex;gap:3px">${t[4].map(c=>`<i style="width:8px;height:8px;background:${c};display:block;border-radius:2px"></i>`).join('')}</span></div><div class="nm">${t[0]}</div>`);b.onclick=()=>{ti=i;vi=0;paint()};L.append(b)});paint();})();
+
+/* ===== S12 online ===== */
+(()=>{const S=['Ir a la ficha Presentación con diapositivas','Clic en Presentar en línea','Conectar al servicio','Compartir el vínculo','Iniciar la presentación'];
+const st=$('#olsteps'),rib=$('#olrib'),body=$('#olbody');let k=0;
+const ic={ini:'<path d="M5 5l14 7-14 7z"/>',act:'<rect x="4" y="5" width="16" height="11" rx="1"/><path d="M10 9l4 2-4 2z"/>',onl:'<circle cx="12" cy="12" r="8"/><path d="M4 12h16M12 4c3 3 3 13 0 16M12 4c-3 3-3 13 0 16"/>',cfg:'<rect x="4" y="4" width="16" height="12" rx="1"/><path d="M8 20h8"/>',rec:'<circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="3"/>'};
+function ribbon(hl){rib.innerHTML=[['ini','Desde el principio'],['act','Desde la diapositiva actual'],['onl','Presentar en línea'],['cfg','Configuración de la presentación'],['rec','Grabar']].map(([i,t])=>`<div class="rb ${hl&&i==='onl'?'hl':''} ${i!=='onl'&&hl?'dim':''}" data-b="${i}"><svg viewBox="0 0 24 24">${ic[i]}</svg>${t}</div>`).join('');const o=$('[data-b="onl"]',rib);o.style.cursor='pointer';o.onclick=()=>{if(k<=1)show(2)}}
+function show(i){k=i;st.innerHTML='';S.forEach((t,j)=>{const b=el('div','ols'+(j===Math.min(i,4)?' on':'')+(j<i?' done':''),`<i>${j<i?'✓':j+1}</i>${t}`);st.append(b)});
+ const tabs=$$('#oltabs span');tabs.forEach(t=>t.classList.toggle('on',i>0&&t.textContent.startsWith('Presentación')));
+ if(i===0){tabs.forEach(t=>t.classList.remove('on'));rib.innerHTML='<div style="padding:10px;color:#888;font-size:12px;align-self:center">Haz clic en la ficha <b style="color:var(--v)">Presentación con diapositivas</b> ↑</div>';const t=tabs.find(t=>t.textContent.startsWith('Presentación'));t.style.cursor='pointer';t.classList.add('on');t.style.animation='pulse 1.4s infinite';t.onclick=()=>{t.style.animation='';if(k===0)show(1)};body.innerHTML='<div class="mslide" style="width:62%;aspect-ratio:16/9"><div class="mini" style="font-size:22px"><div class="h">Mi presentación</div><div class="ln" style="width:70%"></div><div class="ln" style="width:50%"></div></div></div>';return}
+ ribbon(i===1);
+ if(i===1){body.innerHTML='<div class="mslide" style="width:62%;aspect-ratio:16/9"><div class="mini" style="font-size:22px"><div class="h">Mi presentación</div><div class="ln" style="width:70%"></div><div class="ln" style="width:50%"></div></div></div>'}
+ if(i===2){body.innerHTML=`<div class="olbox"><h6>Presentar en línea</h6>Comparte tu presentación con espectadores remotos que pueden verla en un explorador web. Se creará un vínculo para enviarles.<label><input type="checkbox" checked> Permitir a los espectadores remotos descargar la presentación</label><div style="display:flex;justify-content:flex-end;gap:8px"><button class="btn ghost" id="olc" style="padding:8px 14px">Cancelar</button><button class="btn" id="olg" style="padding:8px 14px">Conectar</button></div></div>`;$('#olg').onclick=()=>{body.innerHTML='<div class="olbox" style="text-align:center"><div class="spin"></div>Preparando la presentación en línea…</div>';setTimeout(()=>show(3),1300)};$('#olc').onclick=()=>show(1)}
+ if(i===3){body.innerHTML=`<div class="olbox"><h6>Comparta este vínculo con los espectadores remotos</h6>Envía el vínculo; cuando inicies, verán tu presentación en su navegador.<div class="lnk"><input id="ollink" readonly value="https://enlace-de-ejemplo.presentacion/espe-nivelacion-1-4"><button class="btn ghost" id="olcp" style="padding:8px 12px">Copiar</button></div><div style="display:flex;justify-content:flex-end"><button class="btn" id="olst" style="padding:9px 16px">▶ Iniciar presentación</button></div><p style="font-size:11.5px;color:var(--mut);margin-top:8px">Enlace ilustrativo. La disponibilidad de esta función depende de la versión de PowerPoint.</p></div>`;
+  $('#olcp').onclick=async()=>{try{await navigator.clipboard.writeText($('#ollink').value);$('#olcp').textContent='¡Copiado!'}catch(e){$('#ollink').select();$('#olcp').textContent='Seleccionado'}};$('#olst').onclick=()=>show(4)}
+ if(i===4){body.innerHTML=`<span class="live">Presentando en línea · 3 espectadores</span><div class="mslide" style="width:72%;aspect-ratio:16/9;background:var(--v)"><div class="mini" style="font-size:26px;color:#fff"><div class="h" style="color:#fff">Mi presentación</div><div class="ln" style="width:70%;background:#ffffff55"></div><div class="ln" style="width:50%;background:#ffffff55"></div></div></div><button class="btn ghost" id="olend" style="position:absolute;bottom:14px;right:14px;padding:8px 14px">Finalizar presentación en línea</button>`;$('#olend').onclick=()=>show(0)}}
+show(0);hooks['s-linea']=()=>{if(k===4)show(0)};})();
+
+/* ===== S13 patrón ===== */
+(()=>{const LAY=[
+['Patrón',[['ti','6%','9%','70%','','1.9em','Título del patrón'],['bx','6%','30%','88%','56%','','• Texto del patrón<br>&nbsp;&nbsp;– Segundo nivel']]],
+['Título',[['ti','10%','34%','80%','','2.4em','Título de la presentación'],['bx','20%','58%','60%','14%','','Subtítulo']]],
+['Título y objetos',[['ti','6%','9%','70%','','1.9em','Título'],['bx','6%','30%','88%','56%','','• Contenido']]],
+['Encabezado de sección',[['ti','6%','46%','70%','','2.2em','Sección'],['bx','6%','70%','60%','10%','','Texto']]],
+['Dos objetos',[['ti','6%','9%','70%','','1.9em','Título'],['bx','6%','30%','42%','56%','','• Contenido'],['bx','52%','30%','42%','56%','','• Contenido']]],
+['Comparación',[['ti','6%','9%','70%','','1.9em','Título'],['bx','6%','28%','42%','9%','','Encabezado'],['bx','52%','28%','42%','9%','','Encabezado'],['bx','6%','40%','42%','46%',''],['bx','52%','40%','42%','46%','']]]];
+function render(l,fs){return `<div class="L" style="font-size:${fs}px"><div class="lg" style="font-size:1em">ESPE</div>${l[1].map(([c,x,y,w,h,f,t])=>`<div class="${c}" style="left:${x};top:${y};width:${w};${h?'height:'+h+';':''}${f?'font-size:'+f+';':'font-size:.8em;padding:.4em .6em;'}">${t||''}</div>`).join('')}<div class="strip"></div></div>`}
+const th=$('#mthumbs'),big=$('#mbig'),M=$('#master');let sel=0;
+function show(i){sel=i;big.innerHTML=render(LAY[i],22);$$('.mth',th).forEach((b,k)=>b.classList.toggle('on',k===i))}
+LAY.forEach((l,i)=>{const b=el('button','mth '+(i?'lay':'big'),render(l,i?6:7)+`<span class="k">${i?i:'P'}</span>`);b.title=l[0];b.onclick=()=>show(i);th.append(b)});
+const cols=['#076F3E','#0A4D2B','#798C52','#D10C0A','#2E6FD8','#1f2a22'];const mc=$('#mcol');
+cols.forEach((c,i)=>{const b=el('button',i?'':'on');b.style.background=c;b.onclick=()=>{M.style.setProperty('--mc',c);$$('button',mc).forEach(x=>x.classList.toggle('on',x===b));flash()};mc.append(b)});
+const fonts=[['Archivo','Archivo'],['Merriweather','Serif'],['Inter','Inter']];const mf=$('#mfont');
+fonts.forEach(([f,n],i)=>{const b=el('button','chip'+(i?'':' on'),n);b.style.fontFamily=f;b.onclick=()=>{M.style.setProperty('--mf',f);$$('.chip',mf).forEach(x=>x.classList.toggle('on',x===b));flash()};mf.append(b)});
+$('#mstrip').onclick=e=>{const on=e.target.classList.toggle('on');M.style.setProperty('--ms',on?'block':'none');flash()};
+$('#mlogo').onclick=e=>{const on=e.target.classList.toggle('on');M.style.setProperty('--ml',on?'block':'none');flash()};
+function flash(){$$('.mth',th).forEach((b,i)=>b.animate([{boxShadow:'0 0 0 3px #F2B705'},{boxShadow:'0 0 0 0 transparent'}],{duration:700,delay:i*70}))}
+show(0);})();
+
+/* ===== S14 marcadores ===== */
+(()=>{const O={
+tabla:['Tabla','<rect x="3" y="4" width="18" height="16" rx="1"/><path d="M3 9h18M3 14h18M9 4v16M15 4v16"/>',()=>`<table style="border-collapse:collapse;font-size:13px;width:85%">${['Herramienta|Tipo','PowerPoint|Escritorio','Google Slides|En línea','Canva|En línea'].map((r,i)=>`<tr>${r.split('|').map(c=>`<td style="border:1px solid #cfd9c6;padding:7px 10px;${i?'':'background:#076F3E;color:#fff;font-weight:700'}">${c}</td>`).join('')}</tr>`).join('')}</table>`],
+grafico:['Gráfico','<path d="M4 20V10M10 20V4M16 20v-8M22 20H2"/>',()=>`<div style="display:flex;align-items:flex-end;gap:14px;height:150px;width:70%;border-bottom:2px solid #cfd9c6">${[40,65,50,95].map((h,i)=>`<div style="flex:1;height:${h}%;border-radius:5px 5px 0 0;background:${i===3?'#D10C0A':'#A3BA8C'};animation:grow .6s ${i*.1}s both;transform-origin:bottom"></div>`).join('')}</div>`],
+smart:['SmartArt','<rect x="2" y="9" width="6" height="6" rx="1"/><rect x="9" y="9" width="6" height="6" rx="1"/><rect x="16" y="9" width="6" height="6" rx="1"/>',()=>`<div style="display:flex;align-items:center;gap:10px">${['Planificar','Diseñar','Presentar'].map((t,i)=>`${i?'<span style="font-size:22px;color:#798C52">➜</span>':''}<div style="padding:22px 16px;border-radius:12px;background:${['#076F3E','#798C52','#F2B705'][i]};color:${i==2?'#222':'#fff'};font:800 16px Archivo">${t}</div>`).join('')}</div>`],
+imagen:['Imagen','<rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="M3 18l6-5 4 3 3-2 5 4"/>',()=>`<svg viewBox="0 0 300 170" style="width:80%;border-radius:10px"><rect width="300" height="170" fill="#DCE5D4"/><circle cx="240" cy="44" r="22" fill="#F2B705"/><path d="M0 170l90-96 60 60 40-34 110 70z" fill="#076F3E"/><path d="M0 170l90-96 50 50" fill="#798C52"/></svg>`],
+video:['Vídeo','<rect x="3" y="5" width="14" height="14" rx="2"/><path d="M17 10l4-3v10l-4-3"/>',()=>`<div style="width:78%;aspect-ratio:16/9;border-radius:10px;background:#13241A;display:grid;place-items:center;position:relative"><div style="width:58px;height:58px;border-radius:50%;background:#F2B705;display:grid;place-items:center;font-size:22px">▶</div><div style="position:absolute;left:10px;right:10px;bottom:10px;height:4px;background:#ffffff33;border-radius:2px"><i style="display:block;width:35%;height:100%;background:#D10C0A;border-radius:2px"></i></div></div>`],
+iconos:['Iconos','<circle cx="12" cy="12" r="9"/><path d="M8 14s1.5 2 4 2 4-2 4-2M9 9h.01M15 9h.01"/>',()=>`<div style="display:flex;gap:18px;font-size:48px">💡🎯📊🚀</div>`]};
+const ic=$('#ic6'),pb=$('#pb'),pt=$('#pt1'),lst=$('#phlist');const hint=pb.querySelector('.ph-hint');
+const st=document.createElement('style');st.textContent='@keyframes grow{from{transform:scaleY(0)}}';document.head.append(st);
+const mark=k=>$$('span',lst).forEach(s=>{if(s.dataset.k===k)s.classList.add('on')});
+Object.entries(O).forEach(([k,[n,svg,f]])=>{const b=el('button','',`<svg viewBox="0 0 24 24">${svg}</svg>`);b.dataset.tip=n;b.onclick=()=>{ic.style.display='none';hint.style.display='none';pb.style.borderColor='transparent';const o=el('div','obj',f());pb.append(o);mark(k);mark('fondo')};ic.append(b)});
+pt.addEventListener('focus',()=>{if(!pt.classList.contains('filled'))pt.textContent=''});
+pt.addEventListener('blur',()=>{if(pt.textContent.trim()){pt.classList.add('filled');mark('texto')}else{pt.classList.remove('filled');pt.textContent='Haga clic para agregar título'}});
+pt.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();pt.blur()}});
+$('#phreset').onclick=()=>{$$('.obj',pb).forEach(o=>o.remove());ic.style.display='';hint.style.display='';pb.style.borderColor='';pt.classList.remove('filled');pt.textContent='Haga clic para agregar título';$$('span',lst).forEach(s=>s.classList.remove('on'))};})();
+
+/* ===== S15 notas ===== */
+(()=>{const pp=$('#pp'),nb=$('#nbtn'),pr=$('#pres');let t0=0,iv=null;
+nb.onclick=()=>{nb.classList.remove('pulse');nb.classList.toggle('on',pp.classList.toggle('shown'))};
+$('#pbtn').onclick=()=>{$('#pnotes').textContent=$('#ntext').value;pr.classList.add('open');t0=Date.now();clearInterval(iv);iv=setInterval(()=>{const s=Math.floor((Date.now()-t0)/1000);$('#tmr').textContent=String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0')},500)};
+$('#pclose').onclick=()=>{pr.classList.remove('open');clearInterval(iv)};
+hooks['leave-s-notas']=()=>{pr.classList.remove('open');clearInterval(iv)};})();
+
+/* ===== S16 hipervínculos ===== */
+(()=>{const hls=$('#hls'),ins=$('#hlins'),stat=$('#hlstat'),dlg=$('#hdlg'),lt=$('#hlt'),rt=$('#hrt'),tip=$('#htip'),log=$('#hlog');let sel=null,tab=0,pick=null,links=[];
+const TABS=[['Archivo o página web existente','<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18"/>'],['Lugar de este documento','<rect x="4" y="4" width="16" height="12" rx="1"/><path d="M8 20h8M12 16v4"/>'],['Crear nuevo documento','<path d="M6 3h8l4 4v14H6z"/><path d="M12 10v6M9 13h6"/>'],['Dirección de correo electrónico','<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/>']];
+const FILES=[['🌐','Guía de PowerPoint (sitio web)','https://edu.gcfglobal.org/es/power-point-2016/'],['📄','Apuntes_Ofimatica.docx','Apuntes_Ofimatica.docx'],['📊','Unidad_1_Presentaciones.pptx','Unidad_1_Presentaciones.pptx'],['📕','Guia_PowerPoint_2016.pdf','Guia_PowerPoint_2016.pdf']];
+const SLD=['1. Gestor de presentaciones','2. Contenido','3. Aplicaciones de gestores','4. Proceso de planificación','5. Animación y transición'];
+function step(n){['#hs1','#hs2','#hs3'].forEach((s,i)=>{$(s).classList.toggle('on',i===n-1);$(s).classList.toggle('done',i<n-1)})}
+$$('.so',hls).forEach(o=>{o.onclick=e=>{e.stopPropagation();$$('.so',hls).forEach(x=>x.classList.remove('sel'));o.classList.add('sel');sel=o;ins.disabled=false;stat.textContent=`Seleccionado: ${o.dataset.o}. Ahora pulsa Insertar vínculo o Ctrl+K`;step(2)};
+ o.onmouseenter=()=>{const l=o.dataset.link;if(!l)return;tip.textContent=l+' — Ctrl+clic para seguir el vínculo';tip.style.display='block';const r=o.getBoundingClientRect(),p=hls.getBoundingClientRect(),s=p.width/hls.offsetWidth;tip.style.left=(r.left-p.left)/s+'px';tip.style.top=(r.bottom-p.top)/s+8+'px'};o.onmouseleave=()=>tip.style.display='none'});
+hls.onclick=()=>{$$('.so',hls).forEach(x=>x.classList.remove('sel'));sel=null;ins.disabled=true;stat.textContent='Selecciona un texto, una forma o una imagen';step(1)};
+function open(){if(!sel){stat.textContent='⚠ Primero selecciona un objeto';return}dlg.classList.add('open');tab=0;pick=null;renderTab();step(3)}
+ins.onclick=open;hooks.ctrlK=open;
+function renderTab(){lt.innerHTML='';TABS.forEach((t,i)=>{const b=el('button',i===tab?'on':'',`<svg viewBox="0 0 24 24">${t[1]}</svg>${t[0]}`);b.onclick=()=>{tab=i;pick=null;renderTab()};lt.append(b)});
+ if(tab===0){rt.innerHTML=`<label>Texto: <input id="hT" value="${sel.dataset.o==='texto'?sel.textContent:'&lt;&lt;Selección en el documento&gt;&gt;'}" ${sel.dataset.o==='texto'?'':'disabled'}></label><label>Buscar en: carpeta actual</label><div class="flist" id="fl">${FILES.map((f,i)=>`<button data-i="${i}">${f[0]} ${f[1]}</button>`).join('')}</div><label>Dirección: <input id="hA" placeholder="https://"></label><div id="mk"></div>`;
+  $$('#fl button').forEach(b=>b.onclick=()=>{$$('#fl button').forEach(x=>x.classList.toggle('on',x===b));const f=FILES[+b.dataset.i];$('#hA').value=f[2];$('#mk').innerHTML=f[1].endsWith('.pptx')?`<button class="btn ghost" id="mkb" style="padding:6px 12px;font-size:12px">Marcador… (elegir diapositiva)</button>`:'';const m=$('#mkb');if(m)m.onclick=()=>{$('#mk').innerHTML=`<label>Diapositiva de la otra presentación:</label><div class="flist">${SLD.map(s=>`<button>${s}</button>`).join('')}</div>`;$$('#mk .flist button').forEach(x=>x.onclick=()=>{$$('#mk .flist button').forEach(y=>y.classList.toggle('on',y===x));$('#hA').value=f[2]+'#'+x.textContent})}})}
+ if(tab===1){rt.innerHTML=`<label>Seleccione un lugar de este documento:</label><div class="flist" id="pl" style="max-height:190px">${['Primera diapositiva','Última diapositiva','Diapositiva siguiente','Diapositiva anterior',...SLD.map(s=>'   '+s)].map(s=>`<button>${s.startsWith('   ')?'&nbsp;&nbsp;&nbsp;▸ '+s.trim():'<b>'+s+'</b>'}</button>`).join('')}</div>`;$$('#pl button').forEach(b=>b.onclick=()=>{$$('#pl button').forEach(x=>x.classList.toggle('on',x===b));pick=b.textContent.replace('▸','').trim()})}
+ if(tab===2){rt.innerHTML=`<label>Nombre del nuevo documento:</label><input id="hN" value="Practica_hipervinculos.pptx"><label>¿Cuándo modificarlo?</label><div style="display:flex;flex-direction:column;gap:6px;font-size:13px"><label style="font-weight:500"><input type="radio" name="w" style="width:auto"> Modificar el nuevo documento más adelante</label><label style="font-weight:500"><input type="radio" name="w" checked style="width:auto"> Modificar el nuevo documento ahora</label></div>`}
+ if(tab===3){rt.innerHTML=`<label>Dirección de correo electrónico:</label><input id="hM" placeholder="docente@ejemplo.edu.ec"><label>Asunto:</label><input id="hS" value="Consulta sobre la clase de Ofimática"><p style="font-size:12px;color:var(--mut)">Al hacer clic, se abrirá el programa de correo con un mensaje nuevo (mailto:).</p>`}}
+function close(){dlg.classList.remove('open')}
+$('#hx').onclick=close;$('#hcancel').onclick=close;
+$('#hok').onclick=()=>{let d='';if(tab===0)d=$('#hA').value||'';if(tab===1)d=pick?'Diapositiva: '+pick:'';if(tab===2)d='Nuevo: '+$('#hN').value;if(tab===3)d=$('#hM').value?'mailto:'+$('#hM').value:'';
+ if(!d){rt.animate([{transform:'translateX(-5px)'},{transform:'translateX(5px)'},{transform:'none'}],{duration:300});return}
+ sel.dataset.link=d;sel.classList.add('linked');links.push(`<b>${sel.dataset.o}</b> → ${d.replace(/</g,'&lt;')}`);log.innerHTML='Vínculos creados:<br>'+links.slice(-3).join('<br>');close();stat.textContent='✓ Vínculo creado. Pasa el cursor sobre el objeto para verlo.';step(1)};})();
+
+/* ===== S17 animaciones ===== */
+(()=>{const T={
+ent:['Entrada','#2BA84A','Los efectos de entrada (estrellas verdes) determinan cómo aparecen los objetos en una diapositiva.',{Aparecer:[{opacity:0},{opacity:0,offset:.99},{opacity:1}],Desvanecer:[{opacity:0},{opacity:1}],'Desplazar hacia arriba':[{opacity:0,transform:'translateY(160px)'},{opacity:1,transform:'none'}],Zoom:[{opacity:0,transform:'scale(.2)'},{opacity:1,transform:'scale(1.08)'},{transform:'none'}]}],
+enf:['Énfasis','#E6B400','Los efectos de énfasis (estrellas amarillas) cambian el tamaño o el color del objeto.',{Pulso:[{transform:'none'},{transform:'scale(1.25)'},{transform:'none'}],Girar:[{transform:'rotate(0)'},{transform:'rotate(360deg)'}],'Color de relleno':[{background:'linear-gradient(145deg,#2f9a5c,#076F3E)'},{background:'#D10C0A'},{background:'#F2B705'},{background:'linear-gradient(145deg,#2f9a5c,#076F3E)'}],Balancín:[{transform:'rotate(0)'},{transform:'rotate(-14deg)'},{transform:'rotate(14deg)'},{transform:'rotate(-8deg)'},{transform:'rotate(0)'}]}],
+sal:['Salida','#D10C0A','Los efectos de salida (estrellas rojas) determinan cómo desaparecen los objetos de una diapositiva.',{Desaparecer:[{opacity:1},{opacity:1,offset:.99},{opacity:0}],Desvanecer:[{opacity:1},{opacity:0}],'Volar hacia fuera':[{transform:'none',opacity:1},{transform:'translateX(420px)',opacity:0}],Reducir:[{transform:'none',opacity:1},{transform:'scale(0) rotate(-90deg)',opacity:0}]}],
+tra:['Trayectoria de movimiento','#2E6FD8','La trayectoria de movimiento establece la naturaleza del movimiento de un objeto: líneas, arcos, giros o formas personalizadas.',{Líneas:'M120 150 L440 150',Arcos:'M110 220 Q280 -40 450 220',Bucle:'M120 150 C 200 20, 360 20, 360 150 S 200 280, 120 150',Zigzag:'M100 220 L190 80 L280 220 L370 80 L460 220'}]};
+const at=$('#atypes'),efx=$('#efx'),ds=$('#adesc'),ob=$('#aobj'),ap=$('#apath'),st=$('#astage');let cur='ent',run=null;
+function play(k,n){const v=T[k][3][n];run&&run.cancel();ob.style.offsetPath='';ob.style.offsetDistance='';ap.innerHTML='';ob.style.left='50%';ob.style.top='50%';ob.style.margin='-65px';
+ if(k==='tra'){const W=st.clientWidth,H=st.clientHeight;ap.setAttribute('viewBox',`0 0 ${W} ${H}`);const sx=W/560,sy=H/300;const p=v.replace(/(-?\d+)\s+(-?\d+)/g,(m,x,y)=>`${(+x*sx).toFixed(1)} ${(+y*sy).toFixed(1)}`);
+  ap.innerHTML=`<path d="${p}" fill="none" stroke="#2E6FD8" stroke-width="3" stroke-dasharray="8 7"/><circle r="7" fill="#2BA84A" cx="${p.match(/-?[\d.]+/g)[0]}" cy="${p.match(/-?[\d.]+/g)[1]}"/>`;
+  ob.style.left='0';ob.style.top='0';ob.style.margin='0';ob.style.offsetPath=`path('${p}')`;ob.style.offsetRotate='0deg';ob.style.offsetAnchor='50% 50%';
+  run=ob.animate([{offsetDistance:'0%'},{offsetDistance:'100%'}],{duration:2200,easing:'ease-in-out',fill:'forwards'});return}
+ run=ob.animate(v,{duration:k==='enf'?1000:900,easing:'cubic-bezier(.2,.8,.2,1)',fill:k==='sal'?'forwards':'none'});
+ if(k==='sal')run.onfinish=()=>setTimeout(()=>{run.cancel();ob.animate([{opacity:0},{opacity:1}],{duration:400})},700)}
+function sel(k){cur=k;const t=T[k];$$('.at',at).forEach(b=>b.classList.toggle('on',b.dataset.k===k));ds.style.setProperty('--c',t[1]);ds.innerHTML=t[2];efx.innerHTML='';efx.style.setProperty('--c',t[1]);Object.keys(t[3]).forEach(n=>{const b=el('button','',n);b.onclick=()=>play(k,n);efx.append(b)});play(k,Object.keys(t[3])[k==='tra'?1:2>Object.keys(t[3]).length?0:2])}
+Object.entries(T).forEach(([k,t])=>{const b=el('button','at',`<div class="star" style="color:${t[1]}">★</div><h5>${t[0]}</h5><p>${k==='tra'?'Recorrido del objeto':k==='enf'?'Tamaño o color':k==='sal'?'Cómo desaparece':'Cómo aparece'}</p>`);b.dataset.k=k;b.style.setProperty('--c',t[1]);b.onclick=()=>sel(k);at.append(b)});
+sel('ent');hooks['s-anim']=()=>setTimeout(()=>play(cur,Object.keys(T[cur][3])[cur==='tra'?1:2]),500);})();
+
+/* ===== S18 transiciones ===== */
+(()=>{const C=[['Sutil','Discretas y elegantes: ideales para la mayoría de las presentaciones.',['Desvanecer','Empujar','Barrido','Revelar']],['Llamativo','Más visibles: úsalas con moderación, para momentos clave.',['Cubo','Voltear','Remolino','Cortina']],['Contenido dinámico','Solo el contenido se mueve; el fondo permanece fijo.',['Panorámica','Noria','Transportador']]];
+const A=$('#tA'),B=$('#tB'),nm=$('#tname'),tc=$('#tcat'),bc=$('#tB .c'),ac=$('#tA .c');let last='Desvanecer',runs=[];
+const E='cubic-bezier(.4,0,.2,1)';
+function reset(){runs.forEach(r=>r.cancel());runs=[];[A,B,ac,bc].forEach(e=>{e.style.transformOrigin='';e.style.zIndex=''});B.style.background='';}
+function an(e,k,o){const r=e.animate(k,Object.assign({duration:1100,easing:E,fill:'both'},o));runs.push(r);return r}
+function play(n){reset();last=n;nm.textContent=n;$$('.tc .chip').forEach(c=>c.classList.toggle('on',c.textContent===n));A.style.zIndex=1;B.style.zIndex=2;
+ const sameBg=()=>{B.style.background='#fff';};
+ switch(n){
+ case'Desvanecer':an(B,[{opacity:0},{opacity:1}]);break;
+ case'Empujar':an(A,[{transform:'none'},{transform:'translateX(-100%)'}]);an(B,[{transform:'translateX(100%)'},{transform:'none'}]);break;
+ case'Barrido':an(B,[{clipPath:'inset(0 100% 0 0)'},{clipPath:'inset(0 0 0 0)'}]);break;
+ case'Revelar':an(A,[{opacity:1},{opacity:0}],{duration:550});an(B,[{opacity:0,transform:'translateX(8%)'},{opacity:1,transform:'none'}],{delay:450,duration:650});break;
+ case'Cubo':A.style.transformOrigin='100% 50%';B.style.transformOrigin='0 50%';an(A,[{transform:'translateX(0) rotateY(0)'},{transform:'translateX(-100%) rotateY(-90deg)'}],{duration:1300});an(B,[{transform:'translateX(100%) rotateY(90deg)'},{transform:'translateX(0) rotateY(0)'}],{duration:1300});break;
+ case'Voltear':an(A,[{transform:'rotateY(0)'},{transform:'rotateY(90deg)'}],{duration:600,easing:'ease-in'});an(B,[{transform:'rotateY(-90deg)'},{transform:'rotateY(0)'}],{duration:600,delay:600,easing:'ease-out'});break;
+ case'Remolino':an(A,[{transform:'none',opacity:1},{transform:'rotate(540deg) scale(0)',opacity:0}],{duration:1200});an(B,[{transform:'rotate(-180deg) scale(0)',opacity:0},{transform:'none',opacity:1}],{duration:1200,delay:500});break;
+ case'Cortina':an(B,[{clipPath:'inset(0 50% 0 50%)'},{clipPath:'inset(0 0 0 0)'}],{duration:1300});break;
+ case'Panorámica':sameBg();an(ac,[{transform:'none'},{transform:'translateY(-110%)'}]);an(bc,[{transform:'translateY(110%)'},{transform:'none'}]);an(B,[{opacity:0},{opacity:0,offset:.01},{opacity:1,offset:.02},{opacity:1}]);break;
+ case'Noria':sameBg();ac.style.transformOrigin='-60% 200%';bc.style.transformOrigin='160% 200%';an(ac,[{transform:'none'},{transform:'rotate(-60deg)'}],{duration:1300});an(bc,[{transform:'rotate(60deg)'},{transform:'none'}],{duration:1300});break;
+ case'Transportador':sameBg();an(ac,[{transform:'none'},{transform:'translateX(-120%) scale(.85)'}]);an(bc,[{transform:'translateX(120%) scale(.85)'},{transform:'none'}],{duration:1100});break;}
+}
+C.forEach(c=>{const d=el('div','tc',`<h5>${c[0]}</h5><p>${c[1]}</p><div class="row"></div>`);c[2].forEach(n=>{const b=el('button','chip',n);b.onclick=()=>play(n);$('.row',d).append(b)});tc.append(d)});
+$('#treplay').onclick=()=>play(last);hooks['s-trans']=()=>setTimeout(()=>play(last),600);})();
+
+/* ===== S19 quiz ===== */
+(()=>{const Q=[
+['¿Qué tipo de efecto de animación se identifica con una estrella verde?',['Entrada','Énfasis','Salida','Trayectoria de movimiento'],0,'Las estrellas verdes son de entrada; amarillas, énfasis; rojas, salida.'],
+['¿Dónde se aplica un cambio que afecta a todas las diapositivas de un mismo diseño?',['Notas del orador','Patrón de diapositivas','Presentar en línea','Transiciones'],1,'El patrón de diapositivas controla el formato de todos los diseños asociados.'],
+['¿Cuál es el tamaño mínimo de fuente recomendado para una diapositiva?',['10 puntos','12 puntos','16 puntos','24 puntos'],3,'Se recomienda un mínimo de 24 puntos y no más de 2 estilos de letra.'],
+['Al cambiar de 16:9 a 4:3, ¿qué opción reduce el contenido para que quepa completo?',['Maximizar','Asegurar ajuste','Panorámica','Recortar'],1,'“Asegurar ajuste” escala el contenido hacia abajo; “Maximizar” puede recortarlo.'],
+['¿Qué atajo de teclado abre el cuadro Insertar hipervínculo?',['Ctrl + H','Ctrl + L','Ctrl + K','Ctrl + V'],2,'Ctrl + K abre Insertar hipervínculo (Insertar › Vínculo).'],
+['Según las buenas prácticas, ¿cuántas viñetas como máximo debería tener una diapositiva?',['Cuatro','Seis','Ocho','No hay límite'],0,'Una idea por diapositiva y nunca más de cuatro viñetas.'],
+['¿Cuál de estos pasos va PRIMERO al planificar una presentación?',['Practica y revisa','Investiga el tema','Comprende la tarea','Planifica el contenido detallado'],2,'Primero debes comprender exactamente qué te piden.'],
+['¿Cuáles son las categorías de transiciones?',['Entrada, énfasis y salida','Sutil, llamativo y contenido dinámico','Lineal, radial y libre','Rápida, media y lenta'],1,'Entrada/énfasis/salida son de animaciones; las transiciones son sutiles, llamativas o de contenido dinámico.']];
+const card=$('#qcard'),dots=$('#qdots');let i=0,ans=[];
+function score(){const s=ans.filter((a,k)=>a===Q[k][2]).length;$('#qscore').textContent=s;$('#qring').style.strokeDashoffset=264-264*s/Q.length;dots.innerHTML=Q.map((q,k)=>`<i class="${ans[k]==null?'':ans[k]===q[2]?'ok':'no'} ${k===i?'cur':''}"></i>`).join('')}
+function show(){const q=Q[i];const done=ans[i]!=null;
+ card.innerHTML=`<div class="qn">Pregunta ${i+1} de ${Q.length}</div><div class="qq swap-in">${q[0]}</div><div class="qopts">${q[1].map((o,k)=>`<button class="qo" data-k="${k}"><b>${'ABCD'[k]}</b>${o}</button>`).join('')}</div><div class="qfb" id="qfb"></div><div class="qnav"><button class="btn ghost" id="qp" ${i?'':'disabled'}>← Anterior</button><button class="btn" id="qn">${i<Q.length-1?'Siguiente →':'Ver resultado'}</button></div>`;
+ const opts=$$('.qo',card);
+ const mark=a=>{opts.forEach((b,k)=>{b.disabled=true;if(k===q[2])b.classList.add('ok');else if(k===a)b.classList.add('no')});$('#qfb').innerHTML=(a===q[2]?'<b style="color:var(--v)">✓ ¡Correcto!</b> ':'<b style="color:var(--r)">✕ Incorrecto.</b> ')+q[3]};
+ if(done)mark(ans[i]);
+ opts.forEach(b=>b.onclick=()=>{ans[i]=+b.dataset.k;mark(ans[i]);score()});
+ $('#qp').onclick=()=>{i--;show()};
+ $('#qn').onclick=()=>{if(i<Q.length-1){i++;show()}else{const s=ans.filter((a,k)=>a===Q[k][2]).length;card.innerHTML=`<div class="qn">Resultado</div><div class="qq">${s===Q.length?'¡Excelente! Dominas el tema 🎉':s>=Q.length*.6?'¡Muy bien! Repasa los temas que fallaste.':'Sigue practicando: vuelve a revisar las diapositivas.'}</div><p class="lead">Obtuviste <b>${s} de ${Q.length}</b> respuestas correctas.</p><div class="qnav"><button class="btn ghost" id="qback">← Revisar respuestas</button><button class="btn" data-goto2="s-recursos">Ver recursos →</button></div>`;$('#qback').onclick=()=>{i=0;show()};$('[data-goto2]',card).onclick=()=>go(byId('s-recursos'))}score()};score()}
+$('#qreset').onclick=()=>{i=0;ans=[];show();score()};show();})();
+
+/* ===== S21 confetti ===== */
+(()=>{const cv=$('#confetti'),cx=cv.getContext('2d');cv.width=1280;cv.height=720;let P=[],raf=null;
+const cols=['#076F3E','#A3BA8C','#F2B705','#D10C0A','#ffffff','#798C52'];
+function burst(x,y){for(let k=0;k<160;k++){const a=Math.random()*Math.PI*2,s=4+Math.random()*9;P.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s-6,r:4+Math.random()*6,c:cols[k%cols.length],rot:Math.random()*6,vr:(Math.random()-.5)*.4,life:1})}if(!raf)loop()}
+function loop(){cx.clearRect(0,0,1280,720);P.forEach(p=>{p.vy+=.22;p.vx*=.99;p.x+=p.vx;p.y+=p.vy;p.rot+=p.vr;p.life-=.006;cx.save();cx.globalAlpha=Math.max(0,p.life);cx.translate(p.x,p.y);cx.rotate(p.rot);cx.fillStyle=p.c;cx.fillRect(-p.r/2,-p.r/4,p.r,p.r/2);cx.restore()});P=P.filter(p=>p.life>0&&p.y<760);raf=P.length?requestAnimationFrame(loop):null;if(!raf)cx.clearRect(0,0,1280,720)}
+$('#thanks').onclick=e=>{const r=stage.getBoundingClientRect(),s=r.width/1280;burst((e.clientX-r.left)/s,(e.clientY-r.top)/s)};
+hooks['s-gracias']=()=>setTimeout(()=>{burst(340,260);setTimeout(()=>burst(940,260),250)},500);})();
+
+/* init from hash */
+function fromHash(){const m=/^#d(\d+)$/.exec(location.hash);return m?Math.min(N,Math.max(1,+m[1]))-1:0}
+cur=-1;go(fromHash(),true);
+addEventListener('hashchange',()=>{const i=fromHash();if(i!==cur)go(i,true)});
+})();
+</script>
+</body>
+</html>
